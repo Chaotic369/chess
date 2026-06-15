@@ -32,37 +32,38 @@
         }
 
         /* Control Panel */
-        #controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-            background: var(--panel-bg);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            width: 100%;
-            max-width: 480px;
-            box-sizing: border-box;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
+                #controls {
+                    display: flex;
+                    gap: 15px;
+                    margin-bottom: 10px;
+                    width: 100%;
+                    max-width: 480px;
+                    box-sizing: border-box;
+                    flex-wrap: wrap;
+                    justify-content: center;
+                    align-items: center;
+                }
 
-        #controls select, #controls input, #controls button {
-            background: #333;
-            color: white;
-            border: 1px solid #555;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
+        #controls select, #controls button {
+                    background: rgba(255, 255, 255, 0.05);
+                    color: #ccc;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    outline: none;
+                    font-family: inherit;
+                    font-weight: 500;
+                }
 
-        #controls button {
-            cursor: pointer;
-            background: var(--dark-sq);
-            font-weight: bold;
-        }
+                #controls button:hover, #controls select:hover {
+                    background: rgba(255, 255, 255, 0.15);
+                    color: #fff;
+                }
 
-        .online-only { display: none; }
+                .online-only { display: none; }
 
         /* Captured Pieces Zones */
         .captured-zone {
@@ -147,46 +148,53 @@
             pointer-events: none;
         }
 
-        #status-display {
+        /* Chat */
+                #chat-container {
                     width: 100%;
                     max-width: 480px;
-                    text-align: center;
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #f1c40f;
-                    min-height: 20px;
-                    margin-bottom: 5px;
+                    display: none;
+                    flex-direction: column;
+                    margin-top: 15px;
+                    gap: 8px;
                 }
-
-                /* Chat */
-                #chat-container {
-            width: 100%;
-            max-width: 480px;
-            display: none;
-            flex-direction: column;
-            margin-top: 10px;
-        }
-        #chat-box {
-            height: 80px;
-            overflow-y: auto;
-            background: var(--panel-bg);
-            font-size: 13px;
-            border: 1px solid #333;
-            padding: 5px;
-            border-radius: 4px 4px 0 0;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        #chat-input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            background: #333;
-            color: white;
-            border: 1px solid #333;
-            border-radius: 0 0 4px 4px;
-        }
+                #chat-box {
+                    height: 90px;
+                    overflow-y: auto;
+                    background: transparent;
+                    font-size: 13px;
+                    color: #ccc;
+                    padding: 0 5px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                    scrollbar-width: thin;
+                    scrollbar-color: #444 transparent;
+                }
+                #chat-box::-webkit-scrollbar {
+                    width: 4px;
+                }
+                #chat-box::-webkit-scrollbar-thumb {
+                    background-color: #444;
+                    border-radius: 4px;
+                }
+                #chat-input {
+                    width: 100%;
+                    padding: 10px 15px;
+                    box-sizing: border-box;
+                    background: rgba(255, 255, 255, 0.05);
+                    color: white;
+                    border: none;
+                    border-radius: 20px;
+                    outline: none;
+                    font-size: 13px;
+                    transition: background 0.3s ease;
+                }
+                #chat-input:focus {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+                #chat-input::placeholder {
+                    color: #777;
+                }
     </style>
 </head>
 <body>
@@ -197,17 +205,15 @@
                 <option value="online">Online</option>
             </select>
             <select id="color-select" class="online-only">
-                <option value="w">Play White</option>
-                <option value="b">Play Black</option>
-            </select>
-            <button id="start-btn">Start / Reset</button>
-            <button id="resign-btn" style="display:none; background: #c0392b;">Resign</button>
-            <button id="draw-btn" style="display:none; background: #2980b9;">Draw</button>
-        </div>
+                        <option value="w">Play White</option>
+                        <option value="b">Play Black</option>
+                    </select>
+                    <button id="start-btn">Join / Sync</button>
+                    <button id="resign-btn" style="display:none;">Resign</button>
+                    <button id="draw-btn" style="display:none;">Offer Draw</button>
+                </div>
 
-        <div id="status-display">White's Turn</div>
-
-        <div id="top-captured" class="captured-zone"></div>
+                <div id="top-captured" class="captured-zone"></div>
     <div id="board"></div>
     <div id="bottom-captured" class="captured-zone"></div>
 
@@ -218,8 +224,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, onValue, set, push, off } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+            import { getDatabase, ref, onValue, set, push, off, get } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
         // Firebase Configuration
         const firebaseConfig = {
@@ -239,6 +245,7 @@
         
                 let selectedSquare = null;
                 let possibleMoves = [];
+                let currentDrawOffer = null;
 
                 // DOM Elements
                 const boardEl = document.getElementById('board');
@@ -252,9 +259,8 @@
                 const colorSelect = document.getElementById('color-select');
                 const startBtn = document.getElementById('start-btn');
                 const resignBtn = document.getElementById('resign-btn');
-                const drawBtn = document.getElementById('draw-btn');
-                const statusDisplay = document.getElementById('status-display');
-                const onlineOnlyElements = document.querySelectorAll('.online-only');
+                        const drawBtn = document.getElementById('draw-btn');
+                        const onlineOnlyElements = document.querySelectorAll('.online-only');
 
                 // UI Event Listeners
                 modeSelect.addEventListener('change', (e) => {
@@ -263,29 +269,37 @@
                     chatContainer.style.display = isOnline ? 'flex' : 'none';
                 });
 
-                startBtn.addEventListener('click', () => {
-                    currentMode = modeSelect.value;
-                    myColor = colorSelect.value;
+                startBtn.addEventListener('click', async () => {
+                            currentMode = modeSelect.value;
+                            myColor = colorSelect.value;
             
-                    resignBtn.style.display = 'inline-block';
-                    drawBtn.style.display = 'inline-block';
+                            resignBtn.style.display = 'inline-block';
+                            drawBtn.style.display = 'inline-block';
             
-                    // Detach previous Firebase listeners
-                    off(ref(db, 'games/')); 
+                            // Detach previous Firebase listeners
+                            off(ref(db, 'games/')); 
             
-                    game.reset();
-                    selectedSquare = null;
-                    possibleMoves = [];
+                            selectedSquare = null;
+                            possibleMoves = [];
 
-                    if (currentMode === 'online') {
-                        chatContainer.style.display = 'flex';
-                        set(ref(db, 'games/' + roomId + '/fen'), game.fen());
-                        setupFirebaseListeners();
-                    } else {
-                        chatContainer.style.display = 'none';
-                    }
-                    renderBoard();
-                });
+                            if (currentMode === 'online') {
+                                chatContainer.style.display = 'flex';
+                
+                                const snapshot = await get(ref(db, 'games/' + roomId + '/fen'));
+                                if (snapshot.exists()) {
+                                    game.load(snapshot.val());
+                                } else {
+                                    game.reset();
+                                    set(ref(db, 'games/' + roomId + '/fen'), game.fen());
+                                }
+                
+                                setupFirebaseListeners();
+                            } else {
+                                game.reset();
+                                chatContainer.style.display = 'none';
+                            }
+                            renderBoard();
+                        });
 
                 resignBtn.addEventListener('click', () => {
                     if (game.game_over()) return;
@@ -294,52 +308,75 @@
                 });
 
                 drawBtn.addEventListener('click', () => {
-                    if (game.game_over()) return;
-                    endGame(`[System]: Draw mutually agreed. Game Reset.`);
-                });
+                            if (game.game_over()) return;
+            
+                            if (currentMode === 'local') {
+                                if (confirm("Do both players agree to a draw?")) {
+                                    endGame(`[System]: Draw mutually agreed. Game Reset.`);
+                                }
+                            } else {
+                                if (currentDrawOffer === null) {
+                                    set(ref(db, 'games/' + roomId + '/drawOffer'), myColor);
+                                    push(ref(db, 'games/' + roomId + '/chat'), { text: `[System]: ${myColor === 'w' ? 'White' : 'Black'} offered a draw.` });
+                                } else if (currentDrawOffer !== myColor) {
+                                    endGame(`[System]: Draw mutually agreed. Game Reset.`);
+                                    set(ref(db, 'games/' + roomId + '/drawOffer'), null);
+                                }
+                            }
+                        });
 
-                function endGame(systemMsg) {
-                    if (currentMode === 'online') {
-                        push(ref(db, 'games/' + roomId + '/chat'), { text: systemMsg });
-                    } else {
-                        alert(systemMsg);
-                    }
-                    game.reset();
-                    if (currentMode === 'online') {
-                        set(ref(db, 'games/' + roomId + '/fen'), game.fen());
-                    }
-                    renderBoard();
-                }
+                        function endGame(systemMsg) {
+                            if (currentMode === 'online') {
+                                push(ref(db, 'games/' + roomId + '/chat'), { text: systemMsg });
+                            } else {
+                                alert(systemMsg);
+                            }
+                            game.reset();
+                            if (currentMode === 'online') {
+                                set(ref(db, 'games/' + roomId + '/fen'), game.fen());
+                                set(ref(db, 'games/' + roomId + '/drawOffer'), null);
+                            }
+                            renderBoard();
+                        }
 
-                function updateStatus() {
-                    let statusHTML = '';
-                    const turnColor = game.turn() === 'w' ? 'White' : 'Black';
-
-                    if (game.in_checkmate()) {
-                        statusHTML = `Checkmate! ${turnColor === 'White' ? 'Black' : 'White'} wins!`;
-                    } else if (game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
-                        statusHTML = 'Game Over: Draw!';
-                    } else {
-                        statusHTML = `${turnColor}'s Turn`;
-                        if (game.in_check()) statusHTML += ' (Check!)';
-                    }
-                    statusDisplay.innerText = statusHTML;
-                }
+                
 
         function setupFirebaseListeners() {
-            // Sync Board state
-            onValue(ref(db, 'games/' + roomId + '/fen'), (snapshot) => {
-                const newFen = snapshot.val();
-                if (newFen && newFen !== game.fen()) {
-                    game.load(newFen);
-                    selectedSquare = null;
-                    possibleMoves = [];
-                    renderBoard();
-                }
-            });
+                    // Sync Board state
+                    onValue(ref(db, 'games/' + roomId + '/fen'), (snapshot) => {
+                        const newFen = snapshot.val();
+                        if (newFen && newFen !== game.fen()) {
+                            game.load(newFen);
+                            selectedSquare = null;
+                            possibleMoves = [];
+                            renderBoard();
+                        }
+                    });
 
-            // Sync Chat
-            onValue(ref(db, 'games/' + roomId + '/chat'), (snapshot) => {
+                    // Sync Draw Offers
+                    onValue(ref(db, 'games/' + roomId + '/drawOffer'), (snapshot) => {
+                        currentDrawOffer = snapshot.val();
+                        if (currentDrawOffer) {
+                            if (currentDrawOffer === myColor) {
+                                drawBtn.innerText = 'Draw Offered...';
+                                drawBtn.style.opacity = '0.5';
+                                drawBtn.style.pointerEvents = 'none';
+                            } else {
+                                drawBtn.innerText = 'Accept Draw';
+                                drawBtn.style.opacity = '1';
+                                drawBtn.style.pointerEvents = 'auto';
+                                drawBtn.style.color = '#f1c40f'; // Highlight
+                            }
+                        } else {
+                            drawBtn.innerText = 'Offer Draw';
+                            drawBtn.style.opacity = '1';
+                            drawBtn.style.pointerEvents = 'auto';
+                            drawBtn.style.color = '#ccc';
+                        }
+                    });
+
+                    // Sync Chat
+                    onValue(ref(db, 'games/' + roomId + '/chat'), (snapshot) => {
                 chatBox.innerHTML = '';
                 snapshot.forEach((child) => {
                     const msg = document.createElement('div');
@@ -402,7 +439,6 @@
             }
 
             renderCapturedPieces(currentPieces, isBoardFlipped);
-                        updateStatus();
                     }
 
                     function handleSquareClick(sqId) {
