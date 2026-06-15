@@ -208,7 +208,7 @@
                         <option value="w">Play White</option>
                         <option value="b">Play Black</option>
                     </select>
-                    <button id="start-btn">Join / Sync</button>
+                    <button id="reset-btn">Reset Game</button>
                     <button id="resign-btn" style="display:none;">Resign</button>
                     <button id="draw-btn" style="display:none;">Offer Draw</button>
                 </div>
@@ -256,35 +256,27 @@
                 const chatInput = document.getElementById('chat-input');
         
                 const modeSelect = document.getElementById('mode-select');
-                const colorSelect = document.getElementById('color-select');
-                const startBtn = document.getElementById('start-btn');
-                const resignBtn = document.getElementById('resign-btn');
+                        const colorSelect = document.getElementById('color-select');
+                        const resetBtn = document.getElementById('reset-btn');
+                        const resignBtn = document.getElementById('resign-btn');
                         const drawBtn = document.getElementById('draw-btn');
                         const onlineOnlyElements = document.querySelectorAll('.online-only');
 
                 // UI Event Listeners
-                modeSelect.addEventListener('change', (e) => {
-                    const isOnline = e.target.value === 'online';
-                    onlineOnlyElements.forEach(el => el.style.display = isOnline ? 'inline-block' : 'none');
-                    chatContainer.style.display = isOnline ? 'flex' : 'none';
-                });
+                        modeSelect.addEventListener('change', async (e) => {
+                            currentMode = e.target.value;
+                            const isOnline = currentMode === 'online';
+            
+                            onlineOnlyElements.forEach(el => el.style.display = isOnline ? 'inline-block' : 'none');
+                            chatContainer.style.display = isOnline ? 'flex' : 'none';
+                            resignBtn.style.display = isOnline ? 'inline-block' : 'none';
+                            drawBtn.style.display = isOnline ? 'inline-block' : 'none';
 
-                startBtn.addEventListener('click', async () => {
-                            currentMode = modeSelect.value;
-                            myColor = colorSelect.value;
-            
-                            resignBtn.style.display = 'inline-block';
-                            drawBtn.style.display = 'inline-block';
-            
-                            // Detach previous Firebase listeners
-                            off(ref(db, 'games/')); 
-            
+                            off(ref(db, 'games/'));
                             selectedSquare = null;
                             possibleMoves = [];
 
-                            if (currentMode === 'online') {
-                                chatContainer.style.display = 'flex';
-                
+                            if (isOnline) {
                                 const snapshot = await get(ref(db, 'games/' + roomId + '/fen'));
                                 if (snapshot.exists()) {
                                     game.load(snapshot.val());
@@ -292,13 +284,31 @@
                                     game.reset();
                                     set(ref(db, 'games/' + roomId + '/fen'), game.fen());
                                 }
-                
                                 setupFirebaseListeners();
                             } else {
                                 game.reset();
-                                chatContainer.style.display = 'none';
                             }
                             renderBoard();
+                        });
+
+                        colorSelect.addEventListener('change', (e) => {
+                            myColor = e.target.value;
+                            renderBoard();
+                        });
+
+                        resetBtn.addEventListener('click', () => {
+                            if (confirm("Are you sure you want to reset the board?")) {
+                                game.reset();
+                                selectedSquare = null;
+                                possibleMoves = [];
+                                currentDrawOffer = null;
+                                if (currentMode === 'online') {
+                                    set(ref(db, 'games/' + roomId + '/fen'), game.fen());
+                                    set(ref(db, 'games/' + roomId + '/drawOffer'), null);
+                                    push(ref(db, 'games/' + roomId + '/chat'), { text: `[System]: Game reset by ${myColor === 'w' ? 'White' : 'Black'}.` });
+                                }
+                                renderBoard();
+                            }
                         });
 
                 resignBtn.addEventListener('click', () => {
