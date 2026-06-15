@@ -3,27 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="color-scheme" content="light only">
+    <meta name="color-scheme" content="dark only">
     <title>Ultimate Chess</title>
     <style>
-            :root {
-                        --board-size: min(460px, 100vw - 20px, 100vh - 300px);
-                        --light-sq: #ffffff;
-                    --dark-sq: #739552;
-                    --highlight: rgba(0, 0, 0, 0.15);
-                    --selected: rgba(241, 196, 15, 0.6);
-                    --coord-light: #739552;
-                    --coord-dark: #ffffff;
-                    --bg-color: #222222;
-                    --panel-bg: #333333;
-                    --accent: #4CAF50;
-                    --danger: #e74c3c;
-                }
+        :root {
+            --board-size: min(460px, 100vw - 20px, 100vh - 300px);
+            --light-sq: #e0e0ff;
+            --dark-sq: #4a4e98;
+            --highlight: rgba(0, 0, 0, 0.25);
+            --selected: rgba(241, 196, 15, 0.6);
+            --coord-light: #4a4e98;
+            --coord-dark: #e0e0ff;
+            
+            /* Deep Blue and Purple Theme */
+            --bg-color: #000432;
+            --panel-bg: #0f124a;
+            --accent: #7b1fa2; 
+            --danger: #d32f2f;
+            --success: #00c853;
+        }
 
         body {
             background-color: var(--bg-color);
             color: white;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -32,6 +35,7 @@
             margin: 0;
             overflow: hidden;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         /* --- Overlays & Modals --- */
@@ -39,52 +43,74 @@
             display: flex;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 4, 50, 0.85);
+            backdrop-filter: blur(5px);
             z-index: 600;
             align-items: center;
             justify-content: center;
         }
 
         .modal-box {
-                    background: var(--bg-color);
-                    padding: 25px;
-                    border-radius: 8px;
-                    border: none;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 15px;
-                    width: 80%;
-                    max-width: 300px;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                }
+            background: var(--panel-bg);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #2a2d6a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 85%;
+            max-width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
 
         .modal-box h2 {
             margin: 0 0 10px 0;
-            font-size: 24px;
+            font-size: 22px;
             color: #fff;
             text-align: center;
+            letter-spacing: 1px;
         }
 
         .btn {
-            background: var(--panel-bg);
+            background: #2a2d6a;
             color: white;
             border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 15px;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 16px; /* 16px prevents iOS input zoom */
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
             width: 100%;
             text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        .btn:hover { background: #444; }
+        .btn:hover { background: #3b3f8c; }
         .btn-primary { background: var(--accent); }
-        .btn-primary:hover { background: #45a049; }
+        .btn-primary:hover { background: #5e1180; }
 
-        #color-modal { display: none; }
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            box-sizing: border-box;
+            background: var(--bg-color);
+            color: white;
+            border: 2px solid #2a2d6a;
+            border-radius: 8px;
+            outline: none;
+            font-size: 16px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+
+        #room-modal { display: none; }
 
         /* --- Game Screen --- */
         #game-screen {
@@ -94,17 +120,40 @@
             width: 100%;
         }
 
+        /* Status Banner */
+        #player-status-banner {
+            display: none;
+            width: 100%;
+            max-width: var(--board-size);
+            padding: 12px;
+            margin-bottom: 5px;
+            background: var(--panel-bg);
+            border: 2px solid #2a2d6a;
+            border-radius: 8px;
+            box-sizing: border-box;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #b3b3cc;
+            transition: all 0.3s ease;
+        }
+        #player-status-banner.active {
+            background: rgba(0, 200, 83, 0.1);
+            border-color: var(--success);
+            color: var(--success);
+        }
+
         /* Sidebar & Hamburger Menu */
-                #hamburger {
-                    position: absolute;
-                    top: 120px;
-                    left: 20px;
-                    font-size: 32px;
-                    color: #ddd;
-                    cursor: pointer;
-                    z-index: 100;
-                    background: transparent;
-                }
+        #hamburger {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
+            color: #ddd;
+            cursor: pointer;
+            z-index: 100;
+            background: transparent;
+        }
 
         #sidebar-overlay {
             position: fixed;
@@ -120,27 +169,27 @@
         }
 
         #sidebar {
-                    position: fixed;
-                    top: 0;
-                    left: -320px;
-                    width: 280px;
-                    height: 100vh;
-                    background: #1a1a1a;
-                    z-index: 200;
-                    transition: left 0.3s ease;
-                    padding: 20px;
-                    box-sizing: border-box;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                    border-right: none;
-                }
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 280px;
+            height: 100vh;
+            background: var(--panel-bg);
+            z-index: 200;
+            transition: left 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-right: 2px solid #2a2d6a;
+        }
 
         #sidebar.open { left: 0; }
         
         #sidebar-close {
             align-self: flex-end;
-            font-size: 28px;
+            font-size: 32px;
             cursor: pointer;
             color: #aaa;
             line-height: 1;
@@ -155,10 +204,10 @@
         }
 
         /* Captured Pieces Zones */
-                .captured-zone {
-                    width: 100%;
-                    max-width: var(--board-size);
-                    min-height: 40px;
+        .captured-zone {
+            width: 100%;
+            max-width: var(--board-size);
+            min-height: 40px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -172,18 +221,19 @@
         #bottom-captured { justify-content: flex-end; }
 
         /* The Board */
-                        #board {
-                            display: grid;
-                            grid-template-columns: repeat(8, 1fr);
-                            grid-template-rows: repeat(8, 1fr);
-                            width: 100%;
-                            max-width: var(--board-size);
-                            aspect-ratio: 1 / 1;
-                    border: none;
-                    border-radius: 4px;
-                    overflow: hidden;
-                    margin: 5px 0;
-                }
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            max-width: var(--board-size);
+            aspect-ratio: 1 / 1;
+            border: 2px solid #2a2d6a;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 5px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
 
         .square { display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; width: 100%; height: 100%; }
         .light { background-color: var(--light-sq); }
@@ -197,126 +247,118 @@
         .dark .coord { color: var(--coord-dark); }
 
         /* Pieces */
-                .piece { width: 85%; height: 85%; object-fit: contain; transition: transform 0.5s ease; transform-origin: center center; pointer-events: none; }
-                .rotate-piece { transform: rotate(180deg); }
-                .black-piece { filter: grayscale(1) brightness(2.5); }
-                .white-piece { filter: grayscale(100%) brightness(150%); }
-                .selected { background-color: var(--selected) !important; }
+        .piece { width: 85%; height: 85%; object-fit: contain; transition: transform 0.5s ease; transform-origin: center center; pointer-events: none; }
+        .rotate-piece { transform: rotate(180deg); }
+        .black-piece { filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(200deg) saturate(3); }
+        .white-piece { filter: grayscale(100%) brightness(150%); }
+        .selected { background-color: var(--selected) !important; }
         .possible-move::after { content: ''; position: absolute; width: 30%; height: 30%; background-color: var(--highlight); border-radius: 50%; pointer-events: none; }
 
         /* Rematch Area */
-                #rematch-container {
-                    display: none;
-                    width: 100%;
-                    max-width: var(--board-size);
-                    margin-top: 10px;
+        #rematch-container {
+            display: none;
+            width: 100%;
+            max-width: var(--board-size);
+            margin-top: 10px;
             justify-content: center;
         }
 
         /* Chat */
-                        #chat-wrapper {
-                            display: none;
-                            flex-direction: column;
-                            width: 100%;
-                            max-width: var(--board-size);
-                            margin-top: 10px;
-                    position: relative;
-                }
-                #chat-toggle {
-                            background: transparent;
-                            color: #fff;
-                            border: none;
-                            padding: 8px;
-                            border-radius: 50%;
-                            cursor: pointer;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            transition: transform 0.2s;
-                            align-self: flex-end;
-                            position: relative;
-                        }
-                        #chat-toggle:hover {
-                            transform: scale(1.1);
-                        }
-                        #unread-badge {
-                            background: var(--danger);
-                            color: white;
-                            border-radius: 50%;
-                            width: 18px;
-                            height: 18px;
-                            font-size: 11px;
-                            display: none;
-                            align-items: center;
-                            justify-content: center;
-                            position: absolute;
-                            top: 0;
-                            right: 0;
-                            font-weight: bold;
-                        }
-                #chat-toast {
-                    position: absolute;
-                    bottom: 100%;
-                    left: 0;
-                    right: 0;
-                    background: rgba(0,0,0,0.85);
-                    color: #fff;
-                    padding: 10px 14px;
-                    border-radius: 6px;
-                    font-size: 13px;
-                    opacity: 0;
-                    pointer-events: none;
-                    transition: opacity 0.3s ease;
-                    z-index: 50;
-                    margin-bottom: 8px;
-                    text-align: center;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-                #chat-container {
-                    width: 100%;
-                    display: none;
-                    flex-direction: column;
-                    gap: 8px;
-                    margin-top: 8px;
-                }
-                #chat-box {
-                    height: 150px;
-                    overflow-y: auto;
-                    background: #222;
-                    font-size: 13px;
-                    color: #ccc;
-                    padding: 8px;
-                    border-radius: 4px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 6px;
-                    border: none;
-                }
-                #chat-input {
-                    width: 100%;
-                    padding: 10px;
-                    box-sizing: border-box;
-                    background: #222;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    outline: none;
-                    font-size: 13px;
-                }
-                #clear-chat-btn {
-                    background: transparent;
-                    border: none;
-                    color: #777;
-                    font-size: 11px;
-                    cursor: pointer;
-                    text-align: right;
-                    align-self: flex-end;
-                    margin-top: 2px;
-                    padding: 0;
-                    text-decoration: underline;
-                }
+        #chat-wrapper {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            max-width: var(--board-size);
+            margin-top: 10px;
+            position: relative;
+        }
+        #chat-toggle {
+            background: var(--panel-bg);
+            color: #fff;
+            border: 2px solid #2a2d6a;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+            align-self: flex-end;
+            position: relative;
+        }
+        #chat-toggle:hover {
+            transform: scale(1.1);
+            background: var(--accent);
+        }
+        #unread-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-weight: bold;
+            border: 2px solid var(--bg-color);
+        }
+        #chat-toast {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(15, 18, 74, 0.9);
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 50;
+            margin-bottom: 8px;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #chat-container {
+            width: 100%;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        #chat-box {
+            height: 150px;
+            overflow-y: auto;
+            background: var(--panel-bg);
+            font-size: 14px;
+            color: #e0e0ff;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border: 2px solid #2a2d6a;
+        }
+        #clear-chat-btn {
+            background: transparent;
+            border: none;
+            color: #b3b3cc;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: right;
+            align-self: flex-end;
+            margin-top: 2px;
+            padding: 0;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -324,16 +366,18 @@
     <div id="start-screen" class="modal-overlay">
         <div class="modal-box">
             <h2>Start Game</h2>
-            <button class="btn btn-primary" id="btn-offline">Offline (Pass & Play)</button>
-            <button class="btn" id="btn-online">Online Multiplayer</button>
+            <button class="btn btn-primary" id="btn-online">Online Multiplayer</button>
+            <button class="btn" id="btn-offline">Offline (Pass & Play)</button>
         </div>
     </div>
 
-    <div id="color-modal" class="modal-overlay">
+    <div id="room-modal" class="modal-overlay">
         <div class="modal-box">
-            <h2>Select Color</h2>
-            <button class="btn" id="btn-play-white" style="background:#fff; color:#000;">Play as White</button>
-            <button class="btn" id="btn-play-black" style="background:#444; color:#fff;">Play as Black</button>
+            <h2>Enter Room Code</h2>
+            <input type="text" id="room-code-input" placeholder="e.g. 7777" maxlength="6" autocomplete="off">
+            <button class="btn btn-primary" id="btn-join-room">Join / Create Match</button>
+            <button class="btn" id="btn-back-room" style="background: transparent; border: 2px solid #2a2d6a;">Cancel</button>
+            <p id="room-error" style="color: var(--danger); font-size: 13px; margin: 0; display: none;"></p>
         </div>
     </div>
 
@@ -345,30 +389,32 @@
             <div id="sidebar-close">&times;</div>
             
             <div id="controls">
-                            <button class="btn" id="reset-btn" style="display:none;">Reset Game</button>
-                            <button class="btn" id="draw-btn" style="display:none;">Offer Draw</button>
-                            <button class="btn" id="resign-btn" style="display:none; background: var(--danger);">Resign</button>
-                        </div>
-                    </div>
+                <button class="btn" id="reset-btn" style="display:none;">Reset Game</button>
+                <button class="btn" id="draw-btn" style="display:none;">Offer Draw</button>
+                <button class="btn" id="resign-btn" style="display:none; background: var(--danger);">Resign</button>
+            </div>
+        </div>
 
-                    <div id="top-captured" class="captured-zone"></div>
-                    <div id="board"></div>
-                    <div id="bottom-captured" class="captured-zone"></div>
+        <div id="player-status-banner">Waiting for Player 2...</div>
+
+        <div id="top-captured" class="captured-zone"></div>
+        <div id="board"></div>
+        <div id="bottom-captured" class="captured-zone"></div>
         
-                    <div id="chat-wrapper">
-                                <div id="chat-toast"></div>
-                                <div id="chat-toggle">
-                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="#ddd"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
-                                    <span id="unread-badge">0</span>
-                                </div>
-                                <div id="chat-container">
-                            <div id="chat-box"></div>
-                            <input type="text" id="chat-input" placeholder="Type a message... (Enter)">
-                            <button id="clear-chat-btn">Clear Chat</button>
-                        </div>
-                    </div>
+        <div id="chat-wrapper">
+            <div id="chat-toast"></div>
+            <div id="chat-toggle">
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="#e0e0ff"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
+                <span id="unread-badge">0</span>
+            </div>
+            <div id="chat-container">
+                <div id="chat-box"></div>
+                <input type="text" id="chat-input" placeholder="Type a message... (Enter)">
+                <button id="clear-chat-btn">Clear Chat</button>
+            </div>
+        </div>
 
-                    <div id="rematch-container">
+        <div id="rematch-container">
             <button class="btn btn-primary" id="rematch-btn" style="width: 100%;">Rematch</button>
         </div>
     </div>
@@ -391,7 +437,7 @@
         const standardCounts = { p: 8, n: 2, b: 2, r: 2, q: 1 };
         
         let currentMode = 'local';
-        const roomId = 'global_live_room';
+        let roomId = null; // Dynamically set now
         let myColor = 'w';
         
         let selectedSquare = null;
@@ -401,7 +447,11 @@
 
         // DOM Elements
         const startScreen = document.getElementById('start-screen');
-        const colorModal = document.getElementById('color-modal');
+        const roomModal = document.getElementById('room-modal');
+        const roomCodeInput = document.getElementById('room-code-input');
+        const roomError = document.getElementById('room-error');
+        const statusBanner = document.getElementById('player-status-banner');
+        
         const boardEl = document.getElementById('board');
         const rematchContainer = document.getElementById('rematch-container');
         const rematchBtn = document.getElementById('rematch-btn');
@@ -411,29 +461,29 @@
         const drawBtn = document.getElementById('draw-btn');
         
         const chatWrapper = document.getElementById('chat-wrapper');
-                const chatContainer = document.getElementById('chat-container');
-                const chatBox = document.getElementById('chat-box');
-                const chatInput = document.getElementById('chat-input');
-                const chatToggle = document.getElementById('chat-toggle');
-                const unreadBadge = document.getElementById('unread-badge');
-                const chatToast = document.getElementById('chat-toast');
+        const chatContainer = document.getElementById('chat-container');
+        const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-input');
+        const chatToggle = document.getElementById('chat-toggle');
+        const unreadBadge = document.getElementById('unread-badge');
+        const chatToast = document.getElementById('chat-toast');
         
-                let initialChatLoad = true;
-                let isChatOpen = false;
-                let unreadCount = 0;
-                let toastTimeout;
+        let initialChatLoad = true;
+        let isChatOpen = false;
+        let unreadCount = 0;
+        let toastTimeout;
 
-                chatToggle.addEventListener('click', () => {
-                    isChatOpen = !isChatOpen;
-                    chatContainer.style.display = isChatOpen ? 'flex' : 'none';
-                    if (isChatOpen) {
-                        unreadCount = 0;
-                        unreadBadge.style.display = 'none';
-                        chatBox.scrollTop = chatBox.scrollHeight;
-                    }
-                });
+        chatToggle.addEventListener('click', () => {
+            isChatOpen = !isChatOpen;
+            chatContainer.style.display = isChatOpen ? 'flex' : 'none';
+            if (isChatOpen) {
+                unreadCount = 0;
+                unreadBadge.style.display = 'none';
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        });
         
-                // Sidebar logic
+        // Sidebar logic
         const hamburger = document.getElementById('hamburger');
         const sidebar = document.getElementById('sidebar');
         const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -454,67 +504,94 @@
         sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
 
         // --- Initial Load Render ---
-        renderBoard(); // Render the board silently behind the modal on page load
+        renderBoard();
 
         // --- Flow Controllers ---
 
         document.getElementById('btn-offline').addEventListener('click', () => {
-                    currentMode = 'local';
-                    myColor = 'w'; 
-                    startScreen.style.display = 'none';
-            
-                    resetBtn.style.display = 'block';
-                    resignBtn.style.display = 'block';
-                    drawBtn.style.display = 'none';
-                    chatWrapper.style.display = 'none';
-            
-                    off(ref(db, 'games/')); // Disconnect any online listeners
-                    game.reset();
-                    renderBoard();
-                });
+            currentMode = 'local';
+            myColor = 'w'; 
+            startScreen.style.display = 'none';
+    
+            resetBtn.style.display = 'block';
+            resignBtn.style.display = 'block';
+            drawBtn.style.display = 'none';
+            chatWrapper.style.display = 'none';
+            statusBanner.style.display = 'none';
+    
+            if (roomId) off(ref(db, 'games/' + roomId));
+            game.reset();
+            renderBoard();
+        });
 
-        document.getElementById('btn-online').addEventListener('click', async () => {
+        document.getElementById('btn-online').addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            roomModal.style.display = 'flex';
+            setTimeout(() => roomCodeInput.focus(), 100);
+        });
+
+        document.getElementById('btn-back-room').addEventListener('click', () => {
+            roomModal.style.display = 'none';
+            startScreen.style.display = 'flex';
+            roomError.style.display = 'none';
+            roomCodeInput.value = '';
+        });
+
+        document.getElementById('btn-join-room').addEventListener('click', async () => {
+            const code = roomCodeInput.value.trim().toUpperCase();
+            if (code.length < 2) {
+                roomError.innerText = "Enter a valid code (min 2 chars).";
+                roomError.style.display = 'block';
+                return;
+            }
+            
+            roomId = 'room_' + code;
+            roomError.style.display = 'none';
+            
             const snap = await get(ref(db, 'games/' + roomId + '/players'));
             const players = snap.val() || {};
             
-            if (players.w && !players.b) {
-                joinOnline('b');
-            } else if (players.b && !players.w) {
-                joinOnline('w');
-            } else if (players.w && players.b) {
-                // Room full, spectating
-                joinOnline('w', true);
+            if (!players.w) {
+                // First to join -> Player 1 (White)
+                joinOnline('w', false);
+            } else if (!players.b) {
+                // Second to join -> Player 2 (Black)
+                joinOnline('b', false);
             } else {
-                startScreen.style.display = 'none';
-                colorModal.style.display = 'flex';
+                // Room is full -> Spectator (White perspective by default)
+                alert("Room full! Joining as spectator.");
+                joinOnline('w', true);
             }
         });
 
-        document.getElementById('btn-play-white').addEventListener('click', () => {
-            colorModal.style.display = 'none';
-            joinOnline('w');
-        });
-        document.getElementById('btn-play-black').addEventListener('click', () => {
-            colorModal.style.display = 'none';
-            joinOnline('b');
-        });
-
         function joinOnline(color, isSpectator = false) {
-                    currentMode = 'online';
-                    myColor = color;
-                    initialChatLoad = true;
-            
-                    startScreen.style.display = 'none';
-            
-                    resetBtn.style.display = 'none'; // No reset in online
-                    resignBtn.style.display = 'block';
-                    drawBtn.style.display = 'block';
-                    chatWrapper.style.display = 'flex';
+            currentMode = 'online';
+            myColor = color;
+            initialChatLoad = true;
+    
+            roomModal.style.display = 'none';
+            resetBtn.style.display = 'none'; 
+            resignBtn.style.display = 'block';
+            drawBtn.style.display = 'block';
+            chatWrapper.style.display = 'flex';
+            statusBanner.style.display = 'block';
 
-            if (!isSpectator) {
+            if (isSpectator) {
+                statusBanner.innerText = `Spectating Room: ${roomId.replace('room_','')}`;
+                statusBanner.className = '';
+            } else {
                 const playerRef = ref(db, 'games/' + roomId + '/players/' + color);
                 set(playerRef, true);
                 onDisconnect(playerRef).remove();
+                
+                // Set initial status text based on role
+                if (color === 'w') {
+                    statusBanner.innerText = "Room Created. Waiting for Player 2...";
+                    statusBanner.className = '';
+                } else {
+                    statusBanner.innerText = "Joined as Player 2. Match Decided!";
+                    statusBanner.className = 'active';
+                }
             }
 
             setupFirebaseListeners();
@@ -594,6 +671,25 @@
         // --- Firebase Sync ---
 
         function setupFirebaseListeners() {
+            // Listen for opponent connection status
+            onValue(ref(db, 'games/' + roomId + '/players'), (snapshot) => {
+                const players = snapshot.val() || {};
+                
+                // If we are currently playing (not spectating)
+                if (currentMode === 'online') {
+                    if (players.w && players.b) {
+                        statusBanner.innerText = "Match Decided! Both Players Active.";
+                        statusBanner.className = 'active';
+                    } else if (players.w && !players.b) {
+                        statusBanner.innerText = "Waiting for Player 2 to join...";
+                        statusBanner.className = '';
+                    } else if (!players.w && players.b) {
+                        statusBanner.innerText = "Player 1 disconnected. Waiting...";
+                        statusBanner.className = '';
+                    }
+                }
+            });
+
             onValue(ref(db, 'games/' + roomId + '/fen'), (snapshot) => {
                 let newFen = snapshot.val();
                 if (!newFen) return;
@@ -668,32 +764,32 @@
             });
 
             onValue(ref(db, 'games/' + roomId + '/chat'), (snapshot) => {
-                            chatBox.innerHTML = '';
-                            let lastMsgText = '';
-                            snapshot.forEach((child) => {
-                                const msg = document.createElement('div');
-                                msg.innerText = child.val().text;
-                                chatBox.appendChild(msg);
-                                lastMsgText = child.val().text;
-                            });
-                            chatBox.scrollTop = chatBox.scrollHeight;
+                chatBox.innerHTML = '';
+                let lastMsgText = '';
+                snapshot.forEach((child) => {
+                    const msg = document.createElement('div');
+                    msg.innerText = child.val().text;
+                    chatBox.appendChild(msg);
+                    lastMsgText = child.val().text;
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
 
-                            if (!initialChatLoad && lastMsgText) {
-                                if (!isChatOpen) {
-                                    unreadCount++;
-                                    unreadBadge.innerText = unreadCount;
-                                    unreadBadge.style.display = 'flex';
-                        
-                                    chatToast.innerText = lastMsgText;
-                                    chatToast.style.opacity = '1';
-                                    clearTimeout(toastTimeout);
-                                    toastTimeout = setTimeout(() => {
-                                        chatToast.style.opacity = '0';
-                                    }, 3000);
-                                }
-                            }
-                            initialChatLoad = false;
-                        });
+                if (!initialChatLoad && lastMsgText) {
+                    if (!isChatOpen) {
+                        unreadCount++;
+                        unreadBadge.innerText = unreadCount;
+                        unreadBadge.style.display = 'flex';
+            
+                        chatToast.innerText = lastMsgText;
+                        chatToast.style.opacity = '1';
+                        clearTimeout(toastTimeout);
+                        toastTimeout = setTimeout(() => {
+                            chatToast.style.opacity = '0';
+                        }, 3000);
+                    }
+                }
+                initialChatLoad = false;
+            });
         }
 
         // --- Chat Handlers ---
@@ -738,15 +834,15 @@
                     if (possibleMoves.some(m => m.to === sqId)) sqEl.classList.add('possible-move');
 
                     if (squareData) {
-                                            currentPieces[squareData.color][squareData.type]++;
-                        
-                                            const img = document.createElement('img');
-                                            img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${squareData.color}${squareData.type.toUpperCase()}.png`;
-                                            img.className = `piece ${isBoardFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : 'white-piece'}`;
-                            
-                                            if ((squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) || possibleMoves.some(m => m.to === sqId)) {
-                                                                        img.style.filter = img.style.filter ? `${img.style.filter} drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))` : 'drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))';
-                                                                    }
+                        currentPieces[squareData.color][squareData.type]++;
+    
+                        const img = document.createElement('img');
+                        img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${squareData.color}${squareData.type.toUpperCase()}.png`;
+                        img.className = `piece ${isBoardFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : 'white-piece'}`;
+        
+                        if ((squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) || possibleMoves.some(m => m.to === sqId)) {
+                            img.style.filter = img.style.filter ? `${img.style.filter} drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))` : 'drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))';
+                        }
                         sqEl.appendChild(img);
                     }
                     
@@ -825,12 +921,12 @@
                 }
 
                 const capturedWhite = standardCounts[type] - currentPieces.w[type];
-                                for (let i = 0; i < capturedWhite; i++) {
-                                    let img = document.createElement('img');
-                                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/w${type.toUpperCase()}.png`;
-                                    img.className = `white-piece ${isBoardFlipped ? 'rotate-piece' : ''}`;
-                                    whiteCapturedZone.appendChild(img);
-                                }
+                for (let i = 0; i < capturedWhite; i++) {
+                    let img = document.createElement('img');
+                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/w${type.toUpperCase()}.png`;
+                    img.className = `white-piece ${isBoardFlipped ? 'rotate-piece' : ''}`;
+                    whiteCapturedZone.appendChild(img);
+                }
             });
         }
 
