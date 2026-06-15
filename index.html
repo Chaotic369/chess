@@ -147,8 +147,19 @@
             pointer-events: none;
         }
 
-        /* Chat */
-        #chat-container {
+        #status-display {
+                    width: 100%;
+                    max-width: 480px;
+                    text-align: center;
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: #f1c40f;
+                    min-height: 20px;
+                    margin-bottom: 5px;
+                }
+
+                /* Chat */
+                #chat-container {
             width: 100%;
             max-width: 480px;
             display: none;
@@ -181,19 +192,22 @@
 <body>
 
     <div id="controls">
-        <select id="mode-select">
-            <option value="local">Pass & Play</option>
-            <option value="online">Online</option>
-        </select>
-        <input type="text" id="room-input" class="online-only" placeholder="Room ID" value="lobby">
-        <select id="color-select" class="online-only">
-            <option value="w">Play White</option>
-            <option value="b">Play Black</option>
-        </select>
-        <button id="start-btn">Start</button>
-    </div>
+            <select id="mode-select">
+                <option value="local">Pass & Play</option>
+                <option value="online">Online</option>
+            </select>
+            <select id="color-select" class="online-only">
+                <option value="w">Play White</option>
+                <option value="b">Play Black</option>
+            </select>
+            <button id="start-btn">Start / Reset</button>
+            <button id="resign-btn" style="display:none; background: #c0392b;">Resign</button>
+            <button id="draw-btn" style="display:none; background: #2980b9;">Draw</button>
+        </div>
 
-    <div id="top-captured" class="captured-zone"></div>
+        <div id="status-display">White's Turn</div>
+
+        <div id="top-captured" class="captured-zone"></div>
     <div id="board"></div>
     <div id="bottom-captured" class="captured-zone"></div>
 
@@ -220,53 +234,97 @@
         const standardCounts = { p: 8, n: 2, b: 2, r: 2, q: 1 };
         
         let currentMode = 'local';
-        let roomId = 'lobby';
-        let myColor = 'w';
+                const roomId = 'global_live_room';
+                let myColor = 'w';
         
-        let selectedSquare = null;
-        let possibleMoves = [];
+                let selectedSquare = null;
+                let possibleMoves = [];
 
-        // DOM Elements
-        const boardEl = document.getElementById('board');
-        const topCaptured = document.getElementById('top-captured');
-        const bottomCaptured = document.getElementById('bottom-captured');
-        const chatContainer = document.getElementById('chat-container');
-        const chatBox = document.getElementById('chat-box');
-        const chatInput = document.getElementById('chat-input');
+                // DOM Elements
+                const boardEl = document.getElementById('board');
+                const topCaptured = document.getElementById('top-captured');
+                const bottomCaptured = document.getElementById('bottom-captured');
+                const chatContainer = document.getElementById('chat-container');
+                const chatBox = document.getElementById('chat-box');
+                const chatInput = document.getElementById('chat-input');
         
-        const modeSelect = document.getElementById('mode-select');
-        const roomInput = document.getElementById('room-input');
-        const colorSelect = document.getElementById('color-select');
-        const startBtn = document.getElementById('start-btn');
-        const onlineOnlyElements = document.querySelectorAll('.online-only');
+                const modeSelect = document.getElementById('mode-select');
+                const colorSelect = document.getElementById('color-select');
+                const startBtn = document.getElementById('start-btn');
+                const resignBtn = document.getElementById('resign-btn');
+                const drawBtn = document.getElementById('draw-btn');
+                const statusDisplay = document.getElementById('status-display');
+                const onlineOnlyElements = document.querySelectorAll('.online-only');
 
-        // UI Event Listeners
-        modeSelect.addEventListener('change', (e) => {
-            const isOnline = e.target.value === 'online';
-            onlineOnlyElements.forEach(el => el.style.display = isOnline ? 'inline-block' : 'none');
-            chatContainer.style.display = isOnline ? 'flex' : 'none';
-        });
+                // UI Event Listeners
+                modeSelect.addEventListener('change', (e) => {
+                    const isOnline = e.target.value === 'online';
+                    onlineOnlyElements.forEach(el => el.style.display = isOnline ? 'inline-block' : 'none');
+                    chatContainer.style.display = isOnline ? 'flex' : 'none';
+                });
 
-        startBtn.addEventListener('click', () => {
-            currentMode = modeSelect.value;
-            roomId = roomInput.value || 'lobby';
-            myColor = colorSelect.value;
+                startBtn.addEventListener('click', () => {
+                    currentMode = modeSelect.value;
+                    myColor = colorSelect.value;
             
-            // Detach previous Firebase listeners
-            off(ref(db, 'games/')); 
+                    resignBtn.style.display = 'inline-block';
+                    drawBtn.style.display = 'inline-block';
             
-            game.reset();
-            selectedSquare = null;
-            possibleMoves = [];
+                    // Detach previous Firebase listeners
+                    off(ref(db, 'games/')); 
+            
+                    game.reset();
+                    selectedSquare = null;
+                    possibleMoves = [];
 
-            if (currentMode === 'online') {
-                chatContainer.style.display = 'flex';
-                setupFirebaseListeners();
-            } else {
-                chatContainer.style.display = 'none';
-            }
-            renderBoard();
-        });
+                    if (currentMode === 'online') {
+                        chatContainer.style.display = 'flex';
+                        set(ref(db, 'games/' + roomId + '/fen'), game.fen());
+                        setupFirebaseListeners();
+                    } else {
+                        chatContainer.style.display = 'none';
+                    }
+                    renderBoard();
+                });
+
+                resignBtn.addEventListener('click', () => {
+                    if (game.game_over()) return;
+                    const loser = currentMode === 'online' ? (myColor === 'w' ? 'White' : 'Black') : (game.turn() === 'w' ? 'White' : 'Black');
+                    endGame(`[System]: ${loser} has resigned. Game Reset.`);
+                });
+
+                drawBtn.addEventListener('click', () => {
+                    if (game.game_over()) return;
+                    endGame(`[System]: Draw mutually agreed. Game Reset.`);
+                });
+
+                function endGame(systemMsg) {
+                    if (currentMode === 'online') {
+                        push(ref(db, 'games/' + roomId + '/chat'), { text: systemMsg });
+                    } else {
+                        alert(systemMsg);
+                    }
+                    game.reset();
+                    if (currentMode === 'online') {
+                        set(ref(db, 'games/' + roomId + '/fen'), game.fen());
+                    }
+                    renderBoard();
+                }
+
+                function updateStatus() {
+                    let statusHTML = '';
+                    const turnColor = game.turn() === 'w' ? 'White' : 'Black';
+
+                    if (game.in_checkmate()) {
+                        statusHTML = `Checkmate! ${turnColor === 'White' ? 'Black' : 'White'} wins!`;
+                    } else if (game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
+                        statusHTML = 'Game Over: Draw!';
+                    } else {
+                        statusHTML = `${turnColor}'s Turn`;
+                        if (game.in_check()) statusHTML += ' (Check!)';
+                    }
+                    statusDisplay.innerText = statusHTML;
+                }
 
         function setupFirebaseListeners() {
             // Sync Board state
@@ -344,11 +402,13 @@
             }
 
             renderCapturedPieces(currentPieces, isBoardFlipped);
-        }
+                        updateStatus();
+                    }
 
-        function handleSquareClick(sqId) {
-            // Prevent moving if online and not your turn
-            if (currentMode === 'online' && game.turn() !== myColor) return;
+                    function handleSquareClick(sqId) {
+                        if (game.game_over()) return;
+                        // Prevent moving if online and not your turn
+                        if (currentMode === 'online' && game.turn() !== myColor) return;
 
             if (selectedSquare) {
                 const moveAttempt = game.move({
