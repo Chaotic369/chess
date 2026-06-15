@@ -1,1 +1,435 @@
- 
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="light only">
+    <title>Ultimate Chess: Local & Online</title>
+    <style>
+        :root {
+            --light-sq: #ffffff;
+            --dark-sq: #739552;
+            --highlight: rgba(0, 0, 0, 0.15);
+            --selected: rgba(241, 196, 15, 0.6);
+            --coord-light: #739552;
+            --coord-dark: #ffffff;
+            --bg-color: #222222;
+            --panel-bg: #111111;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Control Panel */
+        #controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            background: var(--panel-bg);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 480px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        #controls select, #controls input, #controls button {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        #controls button {
+            cursor: pointer;
+            background: var(--dark-sq);
+            font-weight: bold;
+        }
+
+        .online-only { display: none; }
+
+        /* Captured Pieces Zones */
+        .captured-zone {
+            width: 100%;
+            max-width: 480px;
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        
+        .captured-zone img {
+            width: 30px;
+            height: 30px;
+            transition: transform 0.4s ease;
+        }
+
+        #top-captured { justify-content: flex-start; }
+        #bottom-captured { justify-content: flex-end; }
+
+        /* The Board */
+        #board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 1 / 1;
+            border: 2px solid #333;
+        }
+
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .light { background-color: var(--light-sq); }
+        .dark { background-color: var(--dark-sq); }
+
+        /* Coordinates */
+        .coord {
+            position: absolute;
+            font-size: clamp(10px, 3vw, 13px);
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .rank-coord { top: 2px; left: 3px; }
+        .file-coord { bottom: 0px; right: 3px; }
+        .light .coord { color: var(--coord-light); }
+        .dark .coord { color: var(--coord-dark); }
+
+        /* Pieces and Highlights */
+        .piece {
+            width: 85%;
+            height: 85%;
+            object-fit: contain;
+            transition: transform 0.5s ease;
+            transform-origin: center center;
+            pointer-events: none;
+        }
+
+        .rotate-piece { transform: rotate(180deg); }
+        .black-piece { filter: grayscale(1) brightness(2.5); }
+        .selected { background-color: var(--selected) !important; }
+        
+        .possible-move::after {
+            content: '';
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background-color: var(--highlight);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* Chat */
+        #chat-container {
+            width: 100%;
+            max-width: 480px;
+            display: none;
+            flex-direction: column;
+            margin-top: 10px;
+        }
+        #chat-box {
+            height: 80px;
+            overflow-y: auto;
+            background: var(--panel-bg);
+            font-size: 13px;
+            border: 1px solid #333;
+            padding: 5px;
+            border-radius: 4px 4px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        #chat-input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            background: #333;
+            color: white;
+            border: 1px solid #333;
+            border-radius: 0 0 4px 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="controls">
+        <select id="mode-select">
+            <option value="local">Pass & Play</option>
+            <option value="online">Online</option>
+        </select>
+        <input type="text" id="room-input" class="online-only" placeholder="Room ID" value="lobby">
+        <select id="color-select" class="online-only">
+            <option value="w">Play White</option>
+            <option value="b">Play Black</option>
+        </select>
+        <button id="start-btn">Start</button>
+    </div>
+
+    <div id="top-captured" class="captured-zone"></div>
+    <div id="board"></div>
+    <div id="bottom-captured" class="captured-zone"></div>
+
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <input type="text" id="chat-input" placeholder="Type a message... (Press Enter)">
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, off } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhg8EM5pSFqtqPCtCnzcySYC6DMoRBevE",
+            databaseURL: "https://chess-361a1-default-rtdb.firebaseio.com"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Game State
+        const game = new Chess();
+        const standardCounts = { p: 8, n: 2, b: 2, r: 2, q: 1 };
+        
+        let currentMode = 'local';
+        let roomId = 'lobby';
+        let myColor = 'w';
+        
+        let selectedSquare = null;
+        let possibleMoves = [];
+
+        // DOM Elements
+        const boardEl = document.getElementById('board');
+        const topCaptured = document.getElementById('top-captured');
+        const bottomCaptured = document.getElementById('bottom-captured');
+        const chatContainer = document.getElementById('chat-container');
+        const chatBox = document.getElementById('chat-box');
+        const chatInput = document.getElementById('chat-input');
+        
+        const modeSelect = document.getElementById('mode-select');
+        const roomInput = document.getElementById('room-input');
+        const colorSelect = document.getElementById('color-select');
+        const startBtn = document.getElementById('start-btn');
+        const onlineOnlyElements = document.querySelectorAll('.online-only');
+
+        // UI Event Listeners
+        modeSelect.addEventListener('change', (e) => {
+            const isOnline = e.target.value === 'online';
+            onlineOnlyElements.forEach(el => el.style.display = isOnline ? 'inline-block' : 'none');
+            chatContainer.style.display = isOnline ? 'flex' : 'none';
+        });
+
+        startBtn.addEventListener('click', () => {
+            currentMode = modeSelect.value;
+            roomId = roomInput.value || 'lobby';
+            myColor = colorSelect.value;
+            
+            // Detach previous Firebase listeners
+            off(ref(db, 'games/')); 
+            
+            game.reset();
+            selectedSquare = null;
+            possibleMoves = [];
+
+            if (currentMode === 'online') {
+                chatContainer.style.display = 'flex';
+                setupFirebaseListeners();
+            } else {
+                chatContainer.style.display = 'none';
+            }
+            renderBoard();
+        });
+
+        function setupFirebaseListeners() {
+            // Sync Board state
+            onValue(ref(db, 'games/' + roomId + '/fen'), (snapshot) => {
+                const newFen = snapshot.val();
+                if (newFen && newFen !== game.fen()) {
+                    game.load(newFen);
+                    selectedSquare = null;
+                    possibleMoves = [];
+                    renderBoard();
+                }
+            });
+
+            // Sync Chat
+            onValue(ref(db, 'games/' + roomId + '/chat'), (snapshot) => {
+                chatBox.innerHTML = '';
+                snapshot.forEach((child) => {
+                    const msg = document.createElement('div');
+                    msg.innerText = child.val().text;
+                    chatBox.appendChild(msg);
+                });
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            const boardData = game.board();
+            let currentPieces = { w: { p:0, n:0, b:0, r:0, q:0 }, b: { p:0, n:0, b:0, r:0, q:0 } };
+            
+            // Determine viewing perspective
+            const isBoardFlipped = currentMode === 'local' ? game.turn() === 'b' : myColor === 'b';
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const squareData = boardData[r][c];
+                    const sqId = String.fromCharCode(97 + c) + (8 - r);
+                    
+                    const sqEl = document.createElement('div');
+                    sqEl.className = `square ${(r + c) % 2 === 0 ? 'light' : 'dark'}`;
+                    sqEl.id = sqId;
+                    
+                    if (selectedSquare === sqId) sqEl.classList.add('selected');
+                    if (possibleMoves.some(m => m.to === sqId)) sqEl.classList.add('possible-move');
+
+                    if (squareData) {
+                        currentPieces[squareData.color][squareData.type]++;
+                        
+                        const img = document.createElement('img');
+                        img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${squareData.color}${squareData.type.toUpperCase()}.png`;
+                        img.className = `piece ${isBoardFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : ''}`;
+                            
+                        if (squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) {
+                            img.style.filter = img.style.filter ? `${img.style.filter} drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))` : 'drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))';
+                        }
+                        sqEl.appendChild(img);
+                    }
+                    
+                    if (c === 0) {
+                        const rankLabel = document.createElement('div');
+                        rankLabel.className = `coord rank-coord ${isBoardFlipped ? 'rotate-piece' : ''}`;
+                        rankLabel.innerText = 8 - r;
+                        sqEl.appendChild(rankLabel);
+                    }
+                    if (r === 7) {
+                        const fileLabel = document.createElement('div');
+                        fileLabel.className = `coord file-coord ${isBoardFlipped ? 'rotate-piece' : ''}`;
+                        fileLabel.innerText = String.fromCharCode(97 + c);
+                        sqEl.appendChild(fileLabel);
+                    }
+
+                    sqEl.addEventListener('click', () => handleSquareClick(sqId));
+                    boardEl.appendChild(sqEl);
+                }
+            }
+
+            renderCapturedPieces(currentPieces, isBoardFlipped);
+        }
+
+        function handleSquareClick(sqId) {
+            // Prevent moving if online and not your turn
+            if (currentMode === 'online' && game.turn() !== myColor) return;
+
+            if (selectedSquare) {
+                const moveAttempt = game.move({
+                    from: selectedSquare,
+                    to: sqId,
+                    promotion: 'q' // Auto-promote to queen for simplicity
+                });
+
+                if (moveAttempt) {
+                    if (currentMode === 'online') {
+                        set(ref(db, 'games/' + roomId + '/fen'), game.fen());
+                    }
+                    selectedSquare = null;
+                    possibleMoves = [];
+                    renderBoard();
+                    return;
+                }
+            }
+
+            const pieceOnSquare = game.get(sqId);
+            if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
+                selectedSquare = sqId;
+                possibleMoves = game.moves({ square: sqId, verbose: true });
+            } else {
+                selectedSquare = null;
+                possibleMoves = [];
+            }
+            
+            renderBoard();
+        }
+
+        function renderCapturedPieces(currentPieces, isBoardFlipped) {
+            topCaptured.innerHTML = '';
+            bottomCaptured.innerHTML = '';
+
+            const whiteCapturedZone = isBoardFlipped ? bottomCaptured : topCaptured;
+            const blackCapturedZone = isBoardFlipped ? topCaptured : bottomCaptured;
+
+            ['p', 'n', 'b', 'r', 'q'].forEach(type => {
+                const capturedBlack = standardCounts[type] - currentPieces.b[type];
+                for (let i = 0; i < capturedBlack; i++) {
+                    let img = document.createElement('img');
+                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/b${type.toUpperCase()}.png`;
+                    img.className = `black-piece ${isBoardFlipped ? 'rotate-piece' : ''}`;
+                    blackCapturedZone.appendChild(img);
+                }
+
+                const capturedWhite = standardCounts[type] - currentPieces.w[type];
+                for (let i = 0; i < capturedWhite; i++) {
+                    let img = document.createElement('img');
+                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/w${type.toUpperCase()}.png`;
+                    img.className = isBoardFlipped ? 'rotate-piece' : '';
+                    whiteCapturedZone.appendChild(img);
+                }
+            });
+        }
+
+        // Chat Input Handler
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && chatInput.value.trim()) {
+                const prefix = myColor === 'w' ? '[White]: ' : '[Black]: ';
+                push(ref(db, 'games/' + roomId + '/chat'), { 
+                    text: prefix + chatInput.value.trim() 
+                });
+                chatInput.value = '';
+            }
+        });
+
+        // Fullscreen Toggle
+        document.body.addEventListener('dblclick', (e) => {
+            if (e.target === document.body) {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => console.log(err));
+                } else {
+                    document.exitFullscreen().catch(err => console.log(err));
+                }
+            }
+        });
+
+        // Initial render
+        renderBoard();
+    </script>
+</body>
+</html>
