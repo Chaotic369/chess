@@ -6,8 +6,9 @@
     <meta name="color-scheme" content="light only">
     <title>Ultimate Chess</title>
     <style>
-        :root {
-                    --light-sq: #ffffff;
+            :root {
+                        --board-size: min(460px, 100vw - 20px, 100vh - 300px);
+                        --light-sq: #ffffff;
                     --dark-sq: #739552;
                     --highlight: rgba(0, 0, 0, 0.15);
                     --selected: rgba(241, 196, 15, 0.6);
@@ -154,10 +155,10 @@
         }
 
         /* Captured Pieces Zones */
-        .captured-zone {
-            width: calc(100% - 20px);
-            max-width: 460px;
-            min-height: 40px;
+                .captured-zone {
+                    width: 100%;
+                    max-width: var(--board-size);
+                    min-height: 40px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -171,13 +172,13 @@
         #bottom-captured { justify-content: flex-end; }
 
         /* The Board */
-                #board {
-                    display: grid;
-                    grid-template-columns: repeat(8, 1fr);
-                    grid-template-rows: repeat(8, 1fr);
-                    width: calc(100% - 20px);
-                    max-width: 460px;
-                    aspect-ratio: 1 / 1;
+                        #board {
+                            display: grid;
+                            grid-template-columns: repeat(8, 1fr);
+                            grid-template-rows: repeat(8, 1fr);
+                            width: 100%;
+                            max-width: var(--board-size);
+                            aspect-ratio: 1 / 1;
                     border: none;
                     border-radius: 4px;
                     overflow: hidden;
@@ -204,21 +205,21 @@
         .possible-move::after { content: ''; position: absolute; width: 30%; height: 30%; background-color: var(--highlight); border-radius: 50%; pointer-events: none; }
 
         /* Rematch Area */
-        #rematch-container {
-            display: none;
-            width: calc(100% - 20px);
-            max-width: 460px;
-            margin-top: 10px;
+                #rematch-container {
+                    display: none;
+                    width: 100%;
+                    max-width: var(--board-size);
+                    margin-top: 10px;
             justify-content: center;
         }
 
         /* Chat */
-                #chat-wrapper {
-                    display: none;
-                    flex-direction: column;
-                    width: calc(100% - 20px);
-                    max-width: 460px;
-                    margin-top: 10px;
+                        #chat-wrapper {
+                            display: none;
+                            flex-direction: column;
+                            width: 100%;
+                            max-width: var(--board-size);
+                            margin-top: 10px;
                     position: relative;
                 }
                 #chat-toggle {
@@ -743,9 +744,9 @@
                                             img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${squareData.color}${squareData.type.toUpperCase()}.png`;
                                             img.className = `piece ${isBoardFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : 'white-piece'}`;
                             
-                                            if (squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) {
-                            img.style.filter = img.style.filter ? `${img.style.filter} drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))` : 'drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))';
-                        }
+                                            if ((squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) || possibleMoves.some(m => m.to === sqId)) {
+                                                                        img.style.filter = img.style.filter ? `${img.style.filter} drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))` : 'drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))';
+                                                                    }
                         sqEl.appendChild(img);
                     }
                     
