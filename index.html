@@ -34,13 +34,18 @@
         }
 
         /* --- Start Screen & Modals --- */
-        #start-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-            z-index: 500;
-        }
+                #start-screen {
+                    display: flex;
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0,0,0,0.8);
+                    backdrop-filter: blur(5px);
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 20px;
+                    z-index: 600;
+                }
 
         #start-screen h1 {
             font-size: 32px;
@@ -87,88 +92,76 @@
         }
 
         /* --- Game Screen --- */
-        #game-screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
+                #game-screen {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 100%;
+                }
 
-        /* Sidebar & Hamburger Menu */
-        #hamburger {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 24px;
-            color: #ddd;
-            cursor: pointer;
-            z-index: 100;
-            background: var(--panel-bg);
-            padding: 6px 12px;
-            border-radius: 6px;
-        }
+                /* Sidebar & Hamburger Menu */
+                #hamburger {
+                    position: absolute;
+                    top: 15px;
+                    left: 15px;
+                    font-size: 24px;
+                    color: #ddd;
+                    cursor: pointer;
+                    z-index: 100;
+                    background: var(--panel-bg);
+                    padding: 6px 12px;
+                    border-radius: 6px;
+                }
 
-        #overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.6);
-            z-index: 150;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+                #overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0,0,0,0.6);
+                    z-index: 150;
+                    display: none;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
 
-        #sidebar {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 280px;
-            height: 100vh;
-            background: #1a1a1a;
-            z-index: 200;
-            transition: left 0.3s ease;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            border-right: 1px solid #333;
-        }
+                #sidebar {
+                    position: fixed;
+                    top: 0;
+                    left: -320px;
+                    width: 280px;
+                    height: 100vh;
+                    background: #1a1a1a;
+                    z-index: 200;
+                    transition: left 0.3s ease;
+                    padding: 20px;
+                    box-sizing: border-box;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                    border-right: 1px solid #333;
+                }
 
-        #sidebar.open { left: 0; }
+                #sidebar.open { left: 0; }
         
-        #sidebar-close {
-            align-self: flex-end;
-            font-size: 28px;
-            cursor: pointer;
-            color: #aaa;
-            line-height: 1;
-            margin-bottom: -10px;
-        }
+                #sidebar-close {
+                    align-self: flex-end;
+                    font-size: 28px;
+                    cursor: pointer;
+                    color: #aaa;
+                    line-height: 1;
+                    margin-bottom: -10px;
+                }
 
-        #controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: 100%;
-        }
+                #controls {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    width: 100%;
+                }
 
-        /* Game Status */
-        #status-display {
-            width: 100%;
-            max-width: 460px;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            color: #f1c40f;
-            min-height: 24px;
-            margin-bottom: 5px;
-        }
-
-        /* Captured Pieces Zones */
+                /* Captured Pieces Zones */
         .captured-zone {
             width: calc(100% - 20px);
             max-width: 460px;
@@ -302,19 +295,18 @@
             </div>
 
             <div id="chat-container">
-                <div style="font-weight:bold; font-size:14px; margin-bottom: -5px;">Room Chat</div>
-                <div id="chat-box"></div>
-                <input type="text" id="chat-input" placeholder="Type a message... (Enter)">
-                <button id="clear-chat-btn">Clear Chat</button>
-            </div>
-        </div>
+                            <div style="font-weight:bold; font-size:14px; margin-bottom: -5px;">Room Chat</div>
+                            <div id="chat-box"></div>
+                            <input type="text" id="chat-input" placeholder="Type a message... (Enter)">
+                            <button id="clear-chat-btn">Clear Chat</button>
+                        </div>
+                    </div>
 
-        <div id="status-display">White's Turn</div>
-        <div id="top-captured" class="captured-zone"></div>
-        <div id="board"></div>
-        <div id="bottom-captured" class="captured-zone"></div>
+                    <div id="top-captured" class="captured-zone"></div>
+                    <div id="board"></div>
+                    <div id="bottom-captured" class="captured-zone"></div>
         
-        <div id="rematch-container">
+                    <div id="rematch-container">
             <button class="btn btn-primary" id="rematch-btn" style="width: 100%;">Rematch</button>
         </div>
     </div>
@@ -346,13 +338,12 @@
         let currentRematchCount = 0;
 
         // DOM Elements
-        const startScreen = document.getElementById('start-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const colorModal = document.getElementById('color-modal');
-        const boardEl = document.getElementById('board');
-        const statusDisplay = document.getElementById('status-display');
-        const rematchContainer = document.getElementById('rematch-container');
-        const rematchBtn = document.getElementById('rematch-btn');
+                const startScreen = document.getElementById('start-screen');
+                const gameScreen = document.getElementById('game-screen');
+                const colorModal = document.getElementById('color-modal');
+                const boardEl = document.getElementById('board');
+                const rematchContainer = document.getElementById('rematch-container');
+                const rematchBtn = document.getElementById('rematch-btn');
         
         const resetBtn = document.getElementById('reset-btn');
         const resignBtn = document.getElementById('resign-btn');
@@ -384,12 +375,11 @@
         // --- Flow Controllers ---
 
         document.getElementById('btn-offline').addEventListener('click', () => {
-            currentMode = 'local';
-            myColor = 'w'; // default bottom color initially
-            startScreen.style.display = 'none';
-            gameScreen.style.display = 'flex';
+                    currentMode = 'local';
+                    myColor = 'w'; // default bottom color initially
+                    startScreen.style.display = 'none';
             
-            resetBtn.style.display = 'block';
+                    resetBtn.style.display = 'block';
             resignBtn.style.display = 'block';
             drawBtn.style.display = 'none';
             chatContainer.style.display = 'none';
@@ -425,13 +415,12 @@
         });
 
         function joinOnline(color, isSpectator = false) {
-            currentMode = 'online';
-            myColor = color;
+                    currentMode = 'online';
+                    myColor = color;
             
-            startScreen.style.display = 'none';
-            gameScreen.style.display = 'flex';
+                    startScreen.style.display = 'none';
             
-            resetBtn.style.display = 'none'; // No reset in online, only draw/resign/rematch
+                    resetBtn.style.display = 'none'; // No reset in online, only draw/resign/rematch
             resignBtn.style.display = 'block';
             drawBtn.style.display = 'block';
             chatContainer.style.display = 'flex';
@@ -630,21 +619,10 @@
         // --- Rendering & Logic ---
 
         function updateStatus() {
-            let statusHTML = '';
-            const turnColor = game.turn() === 'w' ? 'White' : 'Black';
-
-            if (game.in_checkmate()) {
-                statusHTML = `Checkmate! ${turnColor === 'White' ? 'Black' : 'White'} wins!`;
-                rematchContainer.style.display = 'flex';
-            } else if (game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
-                statusHTML = 'Game Over: Draw!';
-                rematchContainer.style.display = 'flex';
-            } else {
-                statusHTML = `${turnColor}'s Turn`;
-                if (game.in_check()) statusHTML += ' (Check!)';
-            }
-            statusDisplay.innerText = statusHTML;
-        }
+                    if (game.in_checkmate() || game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
+                        rematchContainer.style.display = 'flex';
+                    }
+                }
 
         function renderBoard() {
             boardEl.innerHTML = '';
