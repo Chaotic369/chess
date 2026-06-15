@@ -3,17 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="color-scheme" content="dark only">
     <title>Ultimate Chess</title>
     <style>
         :root {
-            --board-size: min(460px, 100vw - 20px, 100vh - 300px);
+            --board-size: min(460px, 100vw - 20px, 100vh - 250px);
             --light-sq: #e0e0ff;
             --dark-sq: #4a4e98;
             --highlight: rgba(0, 0, 0, 0.25);
             --selected: rgba(241, 196, 15, 0.6);
-            --coord-light: #4a4e98;
-            --coord-dark: #e0e0ff;
             
             /* Deep Blue and Purple Theme */
             --bg-color: #000432;
@@ -26,7 +23,7 @@
         body {
             background-color: var(--bg-color);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -38,19 +35,21 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* --- Overlays & Modals --- */
-        .modal-overlay {
-            display: flex;
+        /* --- Local File Warning --- */
+        #local-warning {
+            display: none;
             position: fixed;
-            inset: 0;
-            background: rgba(0, 4, 50, 0.85);
-            backdrop-filter: blur(5px);
-            z-index: 600;
-            align-items: center;
-            justify-content: center;
+            top: 0; left: 0; width: 100%;
+            background: var(--danger);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-weight: bold;
+            z-index: 9999;
         }
 
-        .modal-box {
+        /* --- UI Panels --- */
+        .panel {
             background: var(--panel-bg);
             padding: 25px;
             border-radius: 12px;
@@ -62,15 +61,11 @@
             width: 85%;
             max-width: 320px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            position: absolute;
+            z-index: 100;
         }
 
-        .modal-box h2 {
-            margin: 0 0 10px 0;
-            font-size: 22px;
-            color: #fff;
-            text-align: center;
-            letter-spacing: 1px;
-        }
+        h2 { margin: 0 0 10px 0; text-align: center; }
 
         .btn {
             background: #2a2d6a;
@@ -78,20 +73,17 @@
             border: none;
             padding: 14px 20px;
             border-radius: 8px;
-            font-size: 16px; /* 16px prevents iOS input zoom */
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
             width: 100%;
-            text-align: center;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
-        .btn:hover { background: #3b3f8c; }
         .btn-primary { background: var(--accent); }
-        .btn-primary:hover { background: #5e1180; }
+        .btn-danger { background: var(--danger); }
+        .btn:active { transform: scale(0.98); }
 
-        input[type="text"] {
+        input {
             width: 100%;
             padding: 14px;
             box-sizing: border-box;
@@ -99,332 +91,102 @@
             color: white;
             border: 2px solid #2a2d6a;
             border-radius: 8px;
-            outline: none;
-            font-size: 16px;
+            font-size: 18px;
             text-align: center;
             text-transform: uppercase;
-            letter-spacing: 2px;
             font-weight: bold;
-        }
-        input[type="text"]:focus {
-            border-color: var(--accent);
+            outline: none;
         }
 
-        #room-modal { display: none; }
+        .code-display {
+            font-size: 32px;
+            letter-spacing: 5px;
+            color: var(--success);
+            background: rgba(0,0,0,0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
 
         /* --- Game Screen --- */
-        #game-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
+        #game-screen { display: none; flex-direction: column; align-items: center; width: 100%; }
 
-        /* Status Banner */
-        #player-status-banner {
-            display: none;
-            width: 100%;
-            max-width: var(--board-size);
-            padding: 12px;
-            margin-bottom: 5px;
+        #status-banner {
+            width: 100%; max-width: var(--board-size);
+            padding: 12px; margin-bottom: 10px;
             background: var(--panel-bg);
-            border: 2px solid #2a2d6a;
-            border-radius: 8px;
-            box-sizing: border-box;
-            text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: #b3b3cc;
-            transition: all 0.3s ease;
+            border: 2px solid #2a2d6a; border-radius: 8px;
+            text-align: center; font-weight: bold; color: #b3b3cc;
         }
-        #player-status-banner.active {
-            background: rgba(0, 200, 83, 0.1);
-            border-color: var(--success);
-            color: var(--success);
-        }
+        #status-banner.active { border-color: var(--success); color: var(--success); }
 
-        /* Sidebar & Hamburger Menu */
-        #hamburger {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 32px;
-            color: #ddd;
-            cursor: pointer;
-            z-index: 100;
-            background: transparent;
-        }
-
-        #sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.6);
-            z-index: 150;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #sidebar {
-            position: fixed;
-            top: 0;
-            left: -320px;
-            width: 280px;
-            height: 100vh;
-            background: var(--panel-bg);
-            z-index: 200;
-            transition: left 0.3s ease;
-            padding: 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            border-right: 2px solid #2a2d6a;
-        }
-
-        #sidebar.open { left: 0; }
-        
-        #sidebar-close {
-            align-self: flex-end;
-            font-size: 32px;
-            cursor: pointer;
-            color: #aaa;
-            line-height: 1;
-            margin-bottom: -10px;
-        }
-
-        #controls {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: 100%;
-        }
-
-        /* Captured Pieces Zones */
-        .captured-zone {
-            width: 100%;
-            max-width: var(--board-size);
-            min-height: 40px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            box-sizing: border-box;
-            background: transparent;
-        }
-        .captured-zone img { width: 30px; height: 30px; transition: transform 0.4s ease; }
-        #top-captured { justify-content: flex-start; }
-        #bottom-captured { justify-content: flex-end; }
-
-        /* The Board */
         #board {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            width: 100%;
-            max-width: var(--board-size);
-            aspect-ratio: 1 / 1;
-            border: 2px solid #2a2d6a;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 5px 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
+            width: 100%; max-width: var(--board-size); aspect-ratio: 1 / 1;
+            border: 2px solid #2a2d6a; border-radius: 4px; overflow: hidden;
         }
 
-        .square { display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; width: 100%; height: 100%; }
+        .square { display: flex; align-items: center; justify-content: center; position: relative; }
         .light { background-color: var(--light-sq); }
         .dark { background-color: var(--dark-sq); }
-
-        /* Coordinates */
-        .coord { position: absolute; font-size: clamp(10px, 3vw, 13px); font-weight: bold; pointer-events: none; z-index: 10; }
-        .rank-coord { top: 2px; left: 3px; }
-        .file-coord { bottom: 0px; right: 3px; }
-        .light .coord { color: var(--coord-light); }
-        .dark .coord { color: var(--coord-dark); }
-
-        /* Pieces */
-        .piece { width: 85%; height: 85%; object-fit: contain; transition: transform 0.5s ease; transform-origin: center center; pointer-events: none; }
+        .piece { width: 85%; height: 85%; pointer-events: none; }
         .rotate-piece { transform: rotate(180deg); }
         .black-piece { filter: grayscale(1) brightness(0.6) sepia(1) hue-rotate(200deg) saturate(3); }
-        .white-piece { filter: grayscale(100%) brightness(150%); }
         .selected { background-color: var(--selected) !important; }
-        .possible-move::after { content: ''; position: absolute; width: 30%; height: 30%; background-color: var(--highlight); border-radius: 50%; pointer-events: none; }
+        .possible-move::after { content: ''; position: absolute; width: 30%; height: 30%; background-color: var(--highlight); border-radius: 50%; }
 
-        /* Rematch Area */
-        #rematch-container {
-            display: none;
-            width: 100%;
-            max-width: var(--board-size);
-            margin-top: 10px;
-            justify-content: center;
-        }
-
-        /* Chat */
-        #chat-wrapper {
-            display: none;
-            flex-direction: column;
-            width: 100%;
-            max-width: var(--board-size);
-            margin-top: 10px;
-            position: relative;
-        }
-        #chat-toggle {
-            background: var(--panel-bg);
-            color: #fff;
-            border: 2px solid #2a2d6a;
-            padding: 8px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s;
-            align-self: flex-end;
-            position: relative;
-        }
-        #chat-toggle:hover {
-            transform: scale(1.1);
-            background: var(--accent);
-        }
-        #unread-badge {
-            background: var(--danger);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 11px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            font-weight: bold;
-            border: 2px solid var(--bg-color);
-        }
-        #chat-toast {
-            position: absolute;
-            bottom: 100%;
-            left: 0;
-            right: 0;
-            background: rgba(15, 18, 74, 0.9);
-            border: 1px solid var(--accent);
-            color: #fff;
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 14px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-            z-index: 50;
-            margin-bottom: 8px;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        #chat-container {
-            width: 100%;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        #chat-box {
-            height: 150px;
-            overflow-y: auto;
-            background: var(--panel-bg);
-            font-size: 14px;
-            color: #e0e0ff;
-            padding: 10px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            border: 2px solid #2a2d6a;
-        }
-        #clear-chat-btn {
-            background: transparent;
-            border: none;
-            color: #b3b3cc;
-            font-size: 12px;
-            cursor: pointer;
-            text-align: right;
-            align-self: flex-end;
-            margin-top: 2px;
-            padding: 0;
-            text-decoration: underline;
-        }
+        /* Hide logic */
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="start-screen" class="modal-overlay">
-        <div class="modal-box">
-            <h2>Start Game</h2>
-            <button class="btn btn-primary" id="btn-online">Online Multiplayer</button>
-            <button class="btn" id="btn-offline">Offline (Pass & Play)</button>
-        </div>
+    <div id="local-warning">WARNING: You opened this as a local file. Multiplayer database connections will be blocked by your browser. Please use a local web server (like VS Code Live Server).</div>
+
+    <div id="menu-panel" class="panel">
+        <h2>Multiplayer Chess</h2>
+        <button class="btn btn-primary" onclick="showCreateRoom()">Create Match</button>
+        <button class="btn" onclick="showJoinRoom()">Join Match</button>
+        <button class="btn" onclick="startOffline()" style="margin-top: 15px; background: transparent; border: 2px solid #2a2d6a;">Pass & Play (Offline)</button>
     </div>
 
-    <div id="room-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h2>Enter Room Code</h2>
-            <input type="text" id="room-code-input" placeholder="e.g. 7777" maxlength="6" autocomplete="off">
-            <button class="btn btn-primary" id="btn-join-room">Join / Create Match</button>
-            <button class="btn" id="btn-back-room" style="background: transparent; border: 2px solid #2a2d6a;">Cancel</button>
-            <p id="room-error" style="color: var(--danger); font-size: 13px; margin: 0; display: none;"></p>
-        </div>
+    <div id="create-panel" class="panel hidden">
+        <h2>Room Created!</h2>
+        <p>Give this code to Player 2:</p>
+        <div id="display-room-code" class="code-display">----</div>
+        <p style="font-size: 14px; color: #aaa; text-align: center;">Waiting for Player 2 to join...</p>
+        <button class="btn btn-danger" onclick="cancelRoom()">Cancel</button>
+    </div>
+
+    <div id="join-panel" class="panel hidden">
+        <h2>Join Match</h2>
+        <input type="text" id="input-room-code" placeholder="Enter 4-Digit Code" maxlength="4">
+        <p id="join-error" style="color: var(--danger); font-size: 14px; display: none;"></p>
+        <button class="btn btn-primary" id="btn-join-submit">Connect</button>
+        <button class="btn" onclick="backToMenu()">Back</button>
     </div>
 
     <div id="game-screen">
-        <div id="hamburger">☰</div>
-        <div id="sidebar-overlay"></div>
-
-        <div id="sidebar">
-            <div id="sidebar-close">&times;</div>
-            
-            <div id="controls">
-                <button class="btn" id="reset-btn" style="display:none;">Reset Game</button>
-                <button class="btn" id="draw-btn" style="display:none;">Offer Draw</button>
-                <button class="btn" id="resign-btn" style="display:none; background: var(--danger);">Resign</button>
-            </div>
-        </div>
-
-        <div id="player-status-banner">Waiting for Player 2...</div>
-
-        <div id="top-captured" class="captured-zone"></div>
+        <div id="status-banner">Waiting for Match...</div>
         <div id="board"></div>
-        <div id="bottom-captured" class="captured-zone"></div>
-        
-        <div id="chat-wrapper">
-            <div id="chat-toast"></div>
-            <div id="chat-toggle">
-                <svg viewBox="0 0 24 24" width="28" height="28" fill="#e0e0ff"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
-                <span id="unread-badge">0</span>
-            </div>
-            <div id="chat-container">
-                <div id="chat-box"></div>
-                <input type="text" id="chat-input" placeholder="Type a message... (Enter)">
-                <button id="clear-chat-btn">Clear Chat</button>
-            </div>
-        </div>
-
-        <div id="rematch-container">
-            <button class="btn btn-primary" id="rematch-btn" style="width: 100%;">Rematch</button>
+        <div style="display: flex; gap: 10px; width: 100%; max-width: var(--board-size); margin-top: 15px;">
+            <button class="btn btn-danger" onclick="window.location.reload()">Leave Match</button>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    
+    <script>
+        if (window.location.protocol === 'file:') {
+            document.getElementById('local-warning').style.display = 'block';
+        }
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, onValue, set, push, off, get, onDisconnect, increment } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getDatabase, ref, onValue, set, get, onDisconnect } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-        // Firebase Configuration
+        // Firebase Setup
         const firebaseConfig = {
             apiKey: "AIzaSyBhg8EM5pSFqtqPCtCnzcySYC6DMoRBevE",
             databaseURL: "https://chess-361a1-default-rtdb.firebaseio.com"
@@ -432,394 +194,148 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Core Game State
+        // State
         const game = new Chess();
-        const standardCounts = { p: 8, n: 2, b: 2, r: 2, q: 1 };
-        
-        let currentMode = 'local';
-        let roomId = null; // Dynamically set now
+        let currentMode = null; // 'offline', 'host', 'client'
+        let roomId = null;
         let myColor = 'w';
-        
         let selectedSquare = null;
         let possibleMoves = [];
-        let currentDrawOffer = null;
-        let currentRematchCount = 0;
 
-        // DOM Elements
-        const startScreen = document.getElementById('start-screen');
-        const roomModal = document.getElementById('room-modal');
-        const roomCodeInput = document.getElementById('room-code-input');
-        const roomError = document.getElementById('room-error');
-        const statusBanner = document.getElementById('player-status-banner');
-        
+        // DOM Setup
         const boardEl = document.getElementById('board');
-        const rematchContainer = document.getElementById('rematch-container');
-        const rematchBtn = document.getElementById('rematch-btn');
+        const statusBanner = document.getElementById('status-banner');
+
+        // --- UI Navigation Methods (Exposed to window for HTML buttons) ---
         
-        const resetBtn = document.getElementById('reset-btn');
-        const resignBtn = document.getElementById('resign-btn');
-        const drawBtn = document.getElementById('draw-btn');
-        
-        const chatWrapper = document.getElementById('chat-wrapper');
-        const chatContainer = document.getElementById('chat-container');
-        const chatBox = document.getElementById('chat-box');
-        const chatInput = document.getElementById('chat-input');
-        const chatToggle = document.getElementById('chat-toggle');
-        const unreadBadge = document.getElementById('unread-badge');
-        const chatToast = document.getElementById('chat-toast');
-        
-        let initialChatLoad = true;
-        let isChatOpen = false;
-        let unreadCount = 0;
-        let toastTimeout;
+        window.showCreateRoom = async () => {
+            document.getElementById('menu-panel').classList.add('hidden');
+            document.getElementById('create-panel').classList.remove('hidden');
+            
+            // Generate a random 4 digit code
+            const code = Math.floor(1000 + Math.random() * 9000).toString();
+            roomId = code;
+            myColor = 'w'; // Creator is ALWAYS White
+            currentMode = 'host';
 
-        chatToggle.addEventListener('click', () => {
-            isChatOpen = !isChatOpen;
-            chatContainer.style.display = isChatOpen ? 'flex' : 'none';
-            if (isChatOpen) {
-                unreadCount = 0;
-                unreadBadge.style.display = 'none';
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        });
-        
-        // Sidebar logic
-        const hamburger = document.getElementById('hamburger');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
+            document.getElementById('display-room-code').innerText = code;
 
-        function toggleSidebar(show) {
-            if (show) {
-                sidebar.classList.add('open');
-                sidebarOverlay.style.display = 'block';
-                setTimeout(() => sidebarOverlay.style.opacity = '1', 10);
-            } else {
-                sidebar.classList.remove('open');
-                sidebarOverlay.style.opacity = '0';
-                setTimeout(() => sidebarOverlay.style.display = 'none', 300);
-            }
-        }
-        hamburger.addEventListener('click', () => toggleSidebar(true));
-        document.getElementById('sidebar-close').addEventListener('click', () => toggleSidebar(false));
-        sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
+            // Setup database room
+            const roomRef = ref(db, 'games/' + roomId);
+            await set(roomRef, {
+                fen: game.fen(),
+                players: { w: true }
+            });
 
-        // --- Initial Load Render ---
-        renderBoard();
+            // Cleanup if they close tab
+            onDisconnect(ref(db, 'games/' + roomId + '/players/w')).remove();
 
-        // --- Flow Controllers ---
+            // Listen for Player 2 joining
+            onValue(ref(db, 'games/' + roomId + '/players/b'), (snapshot) => {
+                if (snapshot.val()) {
+                    // Player 2 joined! Start the game.
+                    document.getElementById('create-panel').classList.add('hidden');
+                    document.getElementById('game-screen').style.display = 'flex';
+                    statusBanner.innerText = `Match Active! You are White.`;
+                    statusBanner.classList.add('active');
+                    setupGameSync();
+                    renderBoard();
+                }
+            });
+        };
 
-        document.getElementById('btn-offline').addEventListener('click', () => {
-            currentMode = 'local';
-            myColor = 'w'; 
-            startScreen.style.display = 'none';
-    
-            resetBtn.style.display = 'block';
-            resignBtn.style.display = 'block';
-            drawBtn.style.display = 'none';
-            chatWrapper.style.display = 'none';
-            statusBanner.style.display = 'none';
-    
-            if (roomId) off(ref(db, 'games/' + roomId));
-            game.reset();
+        window.showJoinRoom = () => {
+            document.getElementById('menu-panel').classList.add('hidden');
+            document.getElementById('join-panel').classList.remove('hidden');
+        };
+
+        window.backToMenu = () => {
+            document.getElementById('join-panel').classList.add('hidden');
+            document.getElementById('menu-panel').classList.remove('hidden');
+            document.getElementById('join-error').style.display = 'none';
+        };
+
+        window.cancelRoom = () => {
+            if (roomId) set(ref(db, 'games/' + roomId), null); // Delete room
+            document.getElementById('create-panel').classList.add('hidden');
+            document.getElementById('menu-panel').classList.remove('hidden');
+        };
+
+        window.startOffline = () => {
+            document.getElementById('menu-panel').classList.add('hidden');
+            document.getElementById('game-screen').style.display = 'flex';
+            currentMode = 'offline';
+            myColor = 'w';
+            statusBanner.innerText = "Pass & Play (Offline)";
             renderBoard();
-        });
+        };
 
-        document.getElementById('btn-online').addEventListener('click', () => {
-            startScreen.style.display = 'none';
-            roomModal.style.display = 'flex';
-            setTimeout(() => roomCodeInput.focus(), 100);
-        });
-
-        document.getElementById('btn-back-room').addEventListener('click', () => {
-            roomModal.style.display = 'none';
-            startScreen.style.display = 'flex';
-            roomError.style.display = 'none';
-            roomCodeInput.value = '';
-        });
-
-        document.getElementById('btn-join-room').addEventListener('click', async () => {
-            const code = roomCodeInput.value.trim().toUpperCase();
-            if (code.length < 2) {
-                roomError.innerText = "Enter a valid code (min 2 chars).";
-                roomError.style.display = 'block';
+        // --- Join Logic ---
+        document.getElementById('btn-join-submit').addEventListener('click', async () => {
+            const code = document.getElementById('input-room-code').value.trim();
+            const errorText = document.getElementById('join-error');
+            
+            if (code.length !== 4) {
+                errorText.innerText = "Enter a 4-digit code.";
+                errorText.style.display = 'block';
                 return;
             }
+
+            const snapshot = await get(ref(db, 'games/' + code));
+            if (!snapshot.exists()) {
+                errorText.innerText = "Room not found or expired.";
+                errorText.style.display = 'block';
+                return;
+            }
+
+            // Room exists. Join as Black.
+            roomId = code;
+            myColor = 'b';
+            currentMode = 'client';
             
-            roomId = 'room_' + code;
-            roomError.style.display = 'none';
+            const playerBRef = ref(db, 'games/' + roomId + '/players/b');
+            await set(playerBRef, true);
+            onDisconnect(playerBRef).remove();
+
+            document.getElementById('join-panel').classList.add('hidden');
+            document.getElementById('game-screen').style.display = 'flex';
+            statusBanner.innerText = `Match Active! You are Black.`;
+            statusBanner.classList.add('active');
             
-            const snap = await get(ref(db, 'games/' + roomId + '/players'));
-            const players = snap.val() || {};
-            
-            if (!players.w) {
-                // First to join -> Player 1 (White)
-                joinOnline('w', false);
-            } else if (!players.b) {
-                // Second to join -> Player 2 (Black)
-                joinOnline('b', false);
-            } else {
-                // Room is full -> Spectator (White perspective by default)
-                alert("Room full! Joining as spectator.");
-                joinOnline('w', true);
-            }
-        });
-
-        function joinOnline(color, isSpectator = false) {
-            currentMode = 'online';
-            myColor = color;
-            initialChatLoad = true;
-    
-            roomModal.style.display = 'none';
-            resetBtn.style.display = 'none'; 
-            resignBtn.style.display = 'block';
-            drawBtn.style.display = 'block';
-            chatWrapper.style.display = 'flex';
-            statusBanner.style.display = 'block';
-
-            if (isSpectator) {
-                statusBanner.innerText = `Spectating Room: ${roomId.replace('room_','')}`;
-                statusBanner.className = '';
-            } else {
-                const playerRef = ref(db, 'games/' + roomId + '/players/' + color);
-                set(playerRef, true);
-                onDisconnect(playerRef).remove();
-                
-                // Set initial status text based on role
-                if (color === 'w') {
-                    statusBanner.innerText = "Room Created. Waiting for Player 2...";
-                    statusBanner.className = '';
-                } else {
-                    statusBanner.innerText = "Joined as Player 2. Match Decided!";
-                    statusBanner.className = 'active';
-                }
-            }
-
-            setupFirebaseListeners();
-
-            get(ref(db, 'games/' + roomId + '/fen')).then(snap => {
-                if (snap.exists()) {
-                    game.load(snap.val());
-                } else {
-                    game.reset();
-                    set(ref(db, 'games/' + roomId + '/fen'), game.fen());
-                }
-                renderBoard();
-            });
-        }
-
-        // --- Sidebar Actions ---
-
-        resetBtn.addEventListener('click', () => {
-            if (confirm("Reset the board?")) {
-                game.reset();
-                selectedSquare = null;
-                possibleMoves = [];
-                rematchContainer.style.display = 'none';
-                toggleSidebar(false);
-                renderBoard();
-            }
-        });
-
-        resignBtn.addEventListener('click', () => {
-            if (game.game_over()) return;
-            const loser = currentMode === 'online' ? (myColor === 'w' ? 'White' : 'Black') : (game.turn() === 'w' ? 'White' : 'Black');
-            endGame(`[System]: ${loser} has resigned.`);
-            toggleSidebar(false);
-        });
-
-        drawBtn.addEventListener('click', () => {
-            if (game.game_over()) return;
-            if (currentDrawOffer === null) {
-                set(ref(db, 'games/' + roomId + '/drawOffer'), myColor);
-                push(ref(db, 'games/' + roomId + '/chat'), { text: `[System]: ${myColor === 'w' ? 'White' : 'Black'} offered a draw.` });
-            } else if (currentDrawOffer !== myColor) {
-                endGame(`[System]: Draw mutually agreed.`);
-                set(ref(db, 'games/' + roomId + '/drawOffer'), null);
-            }
-            toggleSidebar(false);
-        });
-
-        // --- Rematch Logic ---
-
-        function offerRematch() {
-            if (currentMode === 'local') {
-                game.reset();
-                myColor = myColor === 'w' ? 'b' : 'w'; 
-                rematchContainer.style.display = 'none';
-                renderBoard();
-            } else {
-                set(ref(db, 'games/' + roomId + '/rematchOffer'), myColor);
-                rematchBtn.innerText = 'Offer Sent...';
-                rematchBtn.style.opacity = '0.7';
-                rematchBtn.style.pointerEvents = 'none';
-            }
-        }
-
-        rematchBtn.addEventListener('click', offerRematch);
-
-        function endGame(systemMsg) {
-            if (currentMode === 'online') {
-                push(ref(db, 'games/' + roomId + '/chat'), { text: systemMsg });
-                set(ref(db, 'games/' + roomId + '/fen'), 'GAME_OVER_FLAG_' + game.fen());
-            } else {
-                alert(systemMsg);
-            }
+            game.load(snapshot.val().fen);
+            setupGameSync();
             renderBoard();
-            rematchContainer.style.display = 'flex';
-        }
+        });
 
-        // --- Firebase Sync ---
-
-        function setupFirebaseListeners() {
-            // Listen for opponent connection status
-            onValue(ref(db, 'games/' + roomId + '/players'), (snapshot) => {
-                const players = snapshot.val() || {};
-                
-                // If we are currently playing (not spectating)
-                if (currentMode === 'online') {
-                    if (players.w && players.b) {
-                        statusBanner.innerText = "Match Decided! Both Players Active.";
-                        statusBanner.className = 'active';
-                    } else if (players.w && !players.b) {
-                        statusBanner.innerText = "Waiting for Player 2 to join...";
-                        statusBanner.className = '';
-                    } else if (!players.w && players.b) {
-                        statusBanner.innerText = "Player 1 disconnected. Waiting...";
-                        statusBanner.className = '';
-                    }
-                }
-            });
-
+        // --- Game Sync ---
+        function setupGameSync() {
             onValue(ref(db, 'games/' + roomId + '/fen'), (snapshot) => {
-                let newFen = snapshot.val();
-                if (!newFen) return;
-                
-                if (newFen.startsWith('GAME_OVER_FLAG_')) {
-                    newFen = newFen.replace('GAME_OVER_FLAG_', '');
-                    rematchContainer.style.display = 'flex';
-                }
-
-                if (newFen !== game.fen()) {
-                    game.load(newFen);
+                const serverFen = snapshot.val();
+                if (serverFen && serverFen !== game.fen()) {
+                    game.load(serverFen);
                     selectedSquare = null;
                     possibleMoves = [];
                     renderBoard();
                 }
             });
 
-            onValue(ref(db, 'games/' + roomId + '/drawOffer'), (snapshot) => {
-                currentDrawOffer = snapshot.val();
-                if (currentDrawOffer) {
-                    if (currentDrawOffer === myColor) {
-                        drawBtn.innerText = 'Draw Offered...';
-                        drawBtn.style.opacity = '0.5';
-                    } else {
-                        drawBtn.innerText = 'Accept Draw';
-                        drawBtn.style.opacity = '1';
-                        drawBtn.style.color = '#f1c40f';
-                    }
+            onValue(ref(db, 'games/' + roomId + '/players'), (snapshot) => {
+                const p = snapshot.val() || {};
+                if (!p.w || !p.b) {
+                    statusBanner.innerText = "Opponent disconnected!";
+                    statusBanner.classList.remove('active');
                 } else {
-                    drawBtn.innerText = 'Offer Draw';
-                    drawBtn.style.opacity = '1';
-                    drawBtn.style.color = 'white';
+                    statusBanner.innerText = `Match Active! You are ${myColor === 'w' ? 'White' : 'Black'}.`;
+                    statusBanner.classList.add('active');
                 }
-            });
-
-            onValue(ref(db, 'games/' + roomId + '/rematchOffer'), (snapshot) => {
-                const offer = snapshot.val();
-                if (offer && offer !== myColor) {
-                    rematchBtn.innerText = 'Accept Rematch';
-                    rematchBtn.style.opacity = '1';
-                    rematchBtn.style.pointerEvents = 'auto';
-                    rematchBtn.onclick = () => {
-                        set(ref(db, 'games/' + roomId + '/rematchCount'), increment(1));
-                        game.reset();
-                        set(ref(db, 'games/' + roomId + '/fen'), game.fen());
-                        set(ref(db, 'games/' + roomId + '/rematchOffer'), null);
-                        
-                        const newColor = myColor === 'w' ? 'b' : 'w';
-                        set(ref(db, 'games/' + roomId + '/players/' + newColor), true);
-                        set(ref(db, 'games/' + roomId + '/players/' + myColor), null);
-                        myColor = newColor;
-                    };
-                } else if (!offer) {
-                    rematchBtn.innerText = 'Rematch';
-                    rematchBtn.style.opacity = '1';
-                    rematchBtn.style.pointerEvents = 'auto';
-                    rematchBtn.onclick = offerRematch;
-                }
-            });
-
-            onValue(ref(db, 'games/' + roomId + '/rematchCount'), (snapshot) => {
-                const count = snapshot.val() || 0;
-                if (count > currentRematchCount) {
-                    currentRematchCount = count;
-                    if (rematchBtn.innerText === 'Offer Sent...') {
-                        myColor = myColor === 'w' ? 'b' : 'w';
-                    }
-                    rematchContainer.style.display = 'none';
-                    game.reset();
-                    renderBoard();
-                }
-            });
-
-            onValue(ref(db, 'games/' + roomId + '/chat'), (snapshot) => {
-                chatBox.innerHTML = '';
-                let lastMsgText = '';
-                snapshot.forEach((child) => {
-                    const msg = document.createElement('div');
-                    msg.innerText = child.val().text;
-                    chatBox.appendChild(msg);
-                    lastMsgText = child.val().text;
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
-
-                if (!initialChatLoad && lastMsgText) {
-                    if (!isChatOpen) {
-                        unreadCount++;
-                        unreadBadge.innerText = unreadCount;
-                        unreadBadge.style.display = 'flex';
-            
-                        chatToast.innerText = lastMsgText;
-                        chatToast.style.opacity = '1';
-                        clearTimeout(toastTimeout);
-                        toastTimeout = setTimeout(() => {
-                            chatToast.style.opacity = '0';
-                        }, 3000);
-                    }
-                }
-                initialChatLoad = false;
             });
         }
 
-        // --- Chat Handlers ---
-
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && chatInput.value.trim()) {
-                const prefix = myColor === 'w' ? '[White]: ' : '[Black]: ';
-                push(ref(db, 'games/' + roomId + '/chat'), { text: prefix + chatInput.value.trim() });
-                chatInput.value = '';
-            }
-        });
-
-        document.getElementById('clear-chat-btn').addEventListener('click', () => {
-            if (confirm("Clear chat?")) set(ref(db, 'games/' + roomId + '/chat'), null);
-        });
-
-        // --- Rendering & Logic ---
-
-        function updateStatus() {
-            if (game.in_checkmate() || game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
-                rematchContainer.style.display = 'flex';
-            }
-        }
-
+        // --- Rendering & Game Mechanics ---
         function renderBoard() {
             boardEl.innerHTML = '';
             const boardData = game.board();
-            let currentPieces = { w: { p:0, n:0, b:0, r:0, q:0 }, b: { p:0, n:0, b:0, r:0, q:0 } };
-            
-            const isBoardFlipped = currentMode === 'local' ? game.turn() === 'b' : myColor === 'b';
+            const isFlipped = currentMode !== 'offline' && myColor === 'b';
 
             for (let r = 0; r < 8; r++) {
                 for (let c = 0; c < 8; c++) {
@@ -834,55 +350,34 @@
                     if (possibleMoves.some(m => m.to === sqId)) sqEl.classList.add('possible-move');
 
                     if (squareData) {
-                        currentPieces[squareData.color][squareData.type]++;
-    
                         const img = document.createElement('img');
                         img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${squareData.color}${squareData.type.toUpperCase()}.png`;
-                        img.className = `piece ${isBoardFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : 'white-piece'}`;
-        
-                        if ((squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) || possibleMoves.some(m => m.to === sqId)) {
-                            img.style.filter = img.style.filter ? `${img.style.filter} drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))` : 'drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))';
-                        }
+                        img.className = `piece ${isFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : ''}`;
                         sqEl.appendChild(img);
                     }
                     
-                    if (c === 0) {
-                        const rankLabel = document.createElement('div');
-                        rankLabel.className = `coord rank-coord ${isBoardFlipped ? 'rotate-piece' : ''}`;
-                        rankLabel.innerText = 8 - r;
-                        sqEl.appendChild(rankLabel);
-                    }
-                    if (r === 7) {
-                        const fileLabel = document.createElement('div');
-                        fileLabel.className = `coord file-coord ${isBoardFlipped ? 'rotate-piece' : ''}`;
-                        fileLabel.innerText = String.fromCharCode(97 + c);
-                        sqEl.appendChild(fileLabel);
-                    }
-
                     sqEl.addEventListener('click', () => handleSquareClick(sqId));
                     boardEl.appendChild(sqEl);
                 }
             }
 
-            renderCapturedPieces(currentPieces, isBoardFlipped);
-            updateStatus();
+            if (isFlipped) boardEl.style.transform = 'rotate(180deg)';
+            else boardEl.style.transform = 'none';
+
+            if (game.game_over()) {
+                statusBanner.innerText = "Game Over!";
+                statusBanner.classList.remove('active');
+            }
         }
 
         function handleSquareClick(sqId) {
             if (game.game_over()) return;
-            if (currentMode === 'online' && game.turn() !== myColor) return;
+            if (currentMode !== 'offline' && game.turn() !== myColor) return;
 
             if (selectedSquare) {
-                const moveAttempt = game.move({
-                    from: selectedSquare,
-                    to: sqId,
-                    promotion: 'q'
-                });
-
+                const moveAttempt = game.move({ from: selectedSquare, to: sqId, promotion: 'q' });
                 if (moveAttempt) {
-                    if (currentMode === 'online') {
-                        set(ref(db, 'games/' + roomId + '/fen'), game.fen());
-                    }
+                    if (currentMode !== 'offline') set(ref(db, 'games/' + roomId + '/fen'), game.fen());
                     selectedSquare = null;
                     possibleMoves = [];
                     renderBoard();
@@ -890,54 +385,16 @@
                 }
             }
 
-            const pieceOnSquare = game.get(sqId);
-            if (pieceOnSquare && pieceOnSquare.color === game.turn()) {
+            const piece = game.get(sqId);
+            if (piece && piece.color === game.turn()) {
                 selectedSquare = sqId;
                 possibleMoves = game.moves({ square: sqId, verbose: true });
             } else {
                 selectedSquare = null;
                 possibleMoves = [];
             }
-            
             renderBoard();
         }
-
-        function renderCapturedPieces(currentPieces, isBoardFlipped) {
-            const topCaptured = document.getElementById('top-captured');
-            const bottomCaptured = document.getElementById('bottom-captured');
-            topCaptured.innerHTML = '';
-            bottomCaptured.innerHTML = '';
-
-            const whiteCapturedZone = isBoardFlipped ? bottomCaptured : topCaptured;
-            const blackCapturedZone = isBoardFlipped ? topCaptured : bottomCaptured;
-
-            ['p', 'n', 'b', 'r', 'q'].forEach(type => {
-                const capturedBlack = standardCounts[type] - currentPieces.b[type];
-                for (let i = 0; i < capturedBlack; i++) {
-                    let img = document.createElement('img');
-                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/b${type.toUpperCase()}.png`;
-                    img.className = `black-piece ${isBoardFlipped ? 'rotate-piece' : ''}`;
-                    blackCapturedZone.appendChild(img);
-                }
-
-                const capturedWhite = standardCounts[type] - currentPieces.w[type];
-                for (let i = 0; i < capturedWhite; i++) {
-                    let img = document.createElement('img');
-                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/w${type.toUpperCase()}.png`;
-                    img.className = `white-piece ${isBoardFlipped ? 'rotate-piece' : ''}`;
-                    whiteCapturedZone.appendChild(img);
-                }
-            });
-        }
-
-        // Fullscreen Toggle
-        document.body.addEventListener('dblclick', (e) => {
-            if (e.target === document.body || e.target.id === 'game-screen') {
-                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>console.log(e));
-                else document.exitFullscreen().catch(e=>console.log(e));
-            }
-        });
-
     </script>
 </body>
 </html>
