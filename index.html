@@ -7,17 +7,17 @@
     <title>Ultimate Chess</title>
     <style>
         :root {
-            --light-sq: #e0e5ec;
-            --dark-sq: #739552;
-            --highlight: rgba(0, 0, 0, 0.15);
-            --selected: rgba(241, 196, 15, 0.6);
-            --coord-light: #739552;
-            --coord-dark: #e0e5ec;
-            --bg-color: #222222;
-            --panel-bg: #333333;
-            --accent: #4CAF50;
-            --danger: #e74c3c;
-        }
+                    --light-sq: #ffffff;
+                    --dark-sq: #739552;
+                    --highlight: rgba(0, 0, 0, 0.15);
+                    --selected: rgba(241, 196, 15, 0.6);
+                    --coord-light: #739552;
+                    --coord-dark: #ffffff;
+                    --bg-color: #222222;
+                    --panel-bg: #333333;
+                    --accent: #4CAF50;
+                    --danger: #e74c3c;
+                }
 
         body {
             background-color: var(--bg-color);
@@ -33,100 +33,92 @@
             user-select: none;
         }
 
-        /* --- Start Screen & Modals --- */
-                #start-screen {
+        /* --- Overlays & Modals --- */
+        .modal-overlay {
+            display: flex;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 600;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-box {
+                    background: var(--bg-color);
+                    padding: 25px;
+                    border-radius: 8px;
+                    border: none;
                     display: flex;
-                    position: fixed;
-                    inset: 0;
-                    background: rgba(0,0,0,0.8);
-                    backdrop-filter: blur(5px);
                     flex-direction: column;
                     align-items: center;
-                    justify-content: center;
-                    gap: 20px;
-                    z-index: 600;
+                    gap: 15px;
+                    width: 80%;
+                    max-width: 300px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
                 }
 
-        #start-screen h1 {
-            font-size: 32px;
-            margin-bottom: 20px;
+        .modal-box h2 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
             color: #fff;
-            letter-spacing: 2px;
+            text-align: center;
         }
 
         .btn {
             background: var(--panel-bg);
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 12px 20px;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
-            width: 250px;
+            width: 100%;
             text-align: center;
         }
         .btn:hover { background: #444; }
         .btn-primary { background: var(--accent); }
         .btn-primary:hover { background: #45a049; }
 
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 600;
-            align-items: center;
-            justify-content: center;
-        }
-        .modal-content {
-            background: var(--bg-color);
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            border: 1px solid #444;
-        }
+        #color-modal { display: none; }
 
         /* --- Game Screen --- */
-                #game-screen {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    width: 100%;
-                }
+        #game-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
 
-                /* Sidebar & Hamburger Menu */
+        /* Sidebar & Hamburger Menu */
                 #hamburger {
                     position: absolute;
-                    top: 15px;
-                    left: 15px;
-                    font-size: 24px;
+                    top: 120px;
+                    left: 20px;
+                    font-size: 32px;
                     color: #ddd;
                     cursor: pointer;
                     z-index: 100;
-                    background: var(--panel-bg);
-                    padding: 6px 12px;
-                    border-radius: 6px;
+                    background: transparent;
                 }
 
-                #overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100vw;
-                    height: 100vh;
-                    background: rgba(0,0,0,0.6);
-                    z-index: 150;
-                    display: none;
-                    opacity: 0;
-                    transition: opacity 0.3s ease;
-                }
+        #sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.6);
+            z-index: 150;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
 
-                #sidebar {
+        #sidebar {
                     position: fixed;
                     top: 0;
                     left: -320px;
@@ -140,28 +132,28 @@
                     display: flex;
                     flex-direction: column;
                     gap: 20px;
-                    border-right: 1px solid #333;
+                    border-right: none;
                 }
 
-                #sidebar.open { left: 0; }
+        #sidebar.open { left: 0; }
         
-                #sidebar-close {
-                    align-self: flex-end;
-                    font-size: 28px;
-                    cursor: pointer;
-                    color: #aaa;
-                    line-height: 1;
-                    margin-bottom: -10px;
-                }
+        #sidebar-close {
+            align-self: flex-end;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+            line-height: 1;
+            margin-bottom: -10px;
+        }
 
-                #controls {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 12px;
-                    width: 100%;
-                }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
 
-                /* Captured Pieces Zones */
+        /* Captured Pieces Zones */
         .captured-zone {
             width: calc(100% - 20px);
             max-width: 460px;
@@ -179,18 +171,18 @@
         #bottom-captured { justify-content: flex-end; }
 
         /* The Board */
-        #board {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            grid-template-rows: repeat(8, 1fr);
-            width: calc(100% - 20px);
-            max-width: 460px;
-            aspect-ratio: 1 / 1;
-            border: 2px solid #444;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 5px 0;
-        }
+                #board {
+                    display: grid;
+                    grid-template-columns: repeat(8, 1fr);
+                    grid-template-rows: repeat(8, 1fr);
+                    width: calc(100% - 20px);
+                    max-width: 460px;
+                    aspect-ratio: 1 / 1;
+                    border: none;
+                    border-radius: 4px;
+                    overflow: hidden;
+                    margin: 5px 0;
+                }
 
         .square { display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; width: 100%; height: 100%; }
         .light { background-color: var(--light-sq); }
@@ -204,10 +196,11 @@
         .dark .coord { color: var(--coord-dark); }
 
         /* Pieces */
-        .piece { width: 85%; height: 85%; object-fit: contain; transition: transform 0.5s ease; transform-origin: center center; pointer-events: none; }
-        .rotate-piece { transform: rotate(180deg); }
-        .black-piece { filter: grayscale(1) brightness(2.5); }
-        .selected { background-color: var(--selected) !important; }
+                .piece { width: 85%; height: 85%; object-fit: contain; transition: transform 0.5s ease; transform-origin: center center; pointer-events: none; }
+                .rotate-piece { transform: rotate(180deg); }
+                .black-piece { filter: grayscale(1) brightness(2.5); }
+                .white-piece { filter: grayscale(100%) brightness(150%); }
+                .selected { background-color: var(--selected) !important; }
         .possible-move::after { content: ''; position: absolute; width: 30%; height: 30%; background-color: var(--highlight); border-radius: 50%; pointer-events: none; }
 
         /* Rematch Area */
@@ -220,62 +213,124 @@
         }
 
         /* Chat */
-        #chat-container {
-            width: 100%;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: auto; /* pushes to bottom of sidebar */
-        }
-        #chat-box {
-            height: 200px;
-            overflow-y: auto;
-            background: #222;
-            font-size: 13px;
-            color: #ccc;
-            padding: 8px;
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            border: 1px solid #333;
-        }
-        #chat-input {
-            width: 100%;
-            padding: 10px;
-            box-sizing: border-box;
-            background: #222;
-            color: white;
-            border: 1px solid #444;
-            border-radius: 4px;
-            outline: none;
-            font-size: 13px;
-        }
-        #clear-chat-btn {
-            background: transparent;
-            border: none;
-            color: #777;
-            font-size: 11px;
-            cursor: pointer;
-            text-align: right;
-            align-self: flex-end;
-            margin-top: 2px;
-            padding: 0;
-            text-decoration: underline;
-        }
+                #chat-wrapper {
+                    display: none;
+                    flex-direction: column;
+                    width: calc(100% - 20px);
+                    max-width: 460px;
+                    margin-top: 10px;
+                    position: relative;
+                }
+                #chat-toggle {
+                            background: transparent;
+                            color: #fff;
+                            border: none;
+                            padding: 8px;
+                            border-radius: 50%;
+                            cursor: pointer;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            transition: transform 0.2s;
+                            align-self: flex-end;
+                            position: relative;
+                        }
+                        #chat-toggle:hover {
+                            transform: scale(1.1);
+                        }
+                        #unread-badge {
+                            background: var(--danger);
+                            color: white;
+                            border-radius: 50%;
+                            width: 18px;
+                            height: 18px;
+                            font-size: 11px;
+                            display: none;
+                            align-items: center;
+                            justify-content: center;
+                            position: absolute;
+                            top: 0;
+                            right: 0;
+                            font-weight: bold;
+                        }
+                #chat-toast {
+                    position: absolute;
+                    bottom: 100%;
+                    left: 0;
+                    right: 0;
+                    background: rgba(0,0,0,0.85);
+                    color: #fff;
+                    padding: 10px 14px;
+                    border-radius: 6px;
+                    font-size: 13px;
+                    opacity: 0;
+                    pointer-events: none;
+                    transition: opacity 0.3s ease;
+                    z-index: 50;
+                    margin-bottom: 8px;
+                    text-align: center;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                #chat-container {
+                    width: 100%;
+                    display: none;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin-top: 8px;
+                }
+                #chat-box {
+                    height: 150px;
+                    overflow-y: auto;
+                    background: #222;
+                    font-size: 13px;
+                    color: #ccc;
+                    padding: 8px;
+                    border-radius: 4px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                    border: none;
+                }
+                #chat-input {
+                    width: 100%;
+                    padding: 10px;
+                    box-sizing: border-box;
+                    background: #222;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    outline: none;
+                    font-size: 13px;
+                }
+                #clear-chat-btn {
+                    background: transparent;
+                    border: none;
+                    color: #777;
+                    font-size: 11px;
+                    cursor: pointer;
+                    text-align: right;
+                    align-self: flex-end;
+                    margin-top: 2px;
+                    padding: 0;
+                    text-decoration: underline;
+                }
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <h1>Ultimate Chess</h1>
-        <button class="btn btn-primary" id="btn-offline">Offline (Pass & Play)</button>
-        <button class="btn" id="btn-online">Online Multiplayer</button>
+    <div id="start-screen" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Start Game</h2>
+            <button class="btn btn-primary" id="btn-offline">Offline (Pass & Play)</button>
+            <button class="btn" id="btn-online">Online Multiplayer</button>
+        </div>
     </div>
 
-    <div id="color-modal" class="modal">
-        <div class="modal-content">
-            <h3 style="margin-top:0;">Select Your Color</h3>
+    <div id="color-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>Select Color</h2>
             <button class="btn" id="btn-play-white" style="background:#fff; color:#000;">Play as White</button>
             <button class="btn" id="btn-play-black" style="background:#444; color:#fff;">Play as Black</button>
         </div>
@@ -283,22 +338,15 @@
 
     <div id="game-screen">
         <div id="hamburger">☰</div>
-        <div id="overlay"></div>
+        <div id="sidebar-overlay"></div>
 
         <div id="sidebar">
             <div id="sidebar-close">&times;</div>
             
             <div id="controls">
-                <button class="btn" id="reset-btn" style="width:100%;">Reset Game</button>
-                <button class="btn" id="draw-btn" style="width:100%;">Offer Draw</button>
-                <button class="btn" id="resign-btn" style="width:100%; background: var(--danger);">Resign</button>
-            </div>
-
-            <div id="chat-container">
-                            <div style="font-weight:bold; font-size:14px; margin-bottom: -5px;">Room Chat</div>
-                            <div id="chat-box"></div>
-                            <input type="text" id="chat-input" placeholder="Type a message... (Enter)">
-                            <button id="clear-chat-btn">Clear Chat</button>
+                            <button class="btn" id="reset-btn" style="display:none;">Reset Game</button>
+                            <button class="btn" id="draw-btn" style="display:none;">Offer Draw</button>
+                            <button class="btn" id="resign-btn" style="display:none; background: var(--danger);">Resign</button>
                         </div>
                     </div>
 
@@ -306,6 +354,19 @@
                     <div id="board"></div>
                     <div id="bottom-captured" class="captured-zone"></div>
         
+                    <div id="chat-wrapper">
+                                <div id="chat-toast"></div>
+                                <div id="chat-toggle">
+                                    <svg viewBox="0 0 24 24" width="28" height="28" fill="#ddd"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
+                                    <span id="unread-badge">0</span>
+                                </div>
+                                <div id="chat-container">
+                            <div id="chat-box"></div>
+                            <input type="text" id="chat-input" placeholder="Type a message... (Enter)">
+                            <button id="clear-chat-btn">Clear Chat</button>
+                        </div>
+                    </div>
+
                     <div id="rematch-container">
             <button class="btn btn-primary" id="rematch-btn" style="width: 100%;">Rematch</button>
         </div>
@@ -338,56 +399,78 @@
         let currentRematchCount = 0;
 
         // DOM Elements
-                const startScreen = document.getElementById('start-screen');
-                const gameScreen = document.getElementById('game-screen');
-                const colorModal = document.getElementById('color-modal');
-                const boardEl = document.getElementById('board');
-                const rematchContainer = document.getElementById('rematch-container');
-                const rematchBtn = document.getElementById('rematch-btn');
+        const startScreen = document.getElementById('start-screen');
+        const colorModal = document.getElementById('color-modal');
+        const boardEl = document.getElementById('board');
+        const rematchContainer = document.getElementById('rematch-container');
+        const rematchBtn = document.getElementById('rematch-btn');
         
         const resetBtn = document.getElementById('reset-btn');
         const resignBtn = document.getElementById('resign-btn');
         const drawBtn = document.getElementById('draw-btn');
         
-        const chatContainer = document.getElementById('chat-container');
-        const chatBox = document.getElementById('chat-box');
-        const chatInput = document.getElementById('chat-input');
+        const chatWrapper = document.getElementById('chat-wrapper');
+                const chatContainer = document.getElementById('chat-container');
+                const chatBox = document.getElementById('chat-box');
+                const chatInput = document.getElementById('chat-input');
+                const chatToggle = document.getElementById('chat-toggle');
+                const unreadBadge = document.getElementById('unread-badge');
+                const chatToast = document.getElementById('chat-toast');
         
-        // Sidebar logic
+                let initialChatLoad = true;
+                let isChatOpen = false;
+                let unreadCount = 0;
+                let toastTimeout;
+
+                chatToggle.addEventListener('click', () => {
+                    isChatOpen = !isChatOpen;
+                    chatContainer.style.display = isChatOpen ? 'flex' : 'none';
+                    if (isChatOpen) {
+                        unreadCount = 0;
+                        unreadBadge.style.display = 'none';
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                });
+        
+                // Sidebar logic
         const hamburger = document.getElementById('hamburger');
         const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+
         function toggleSidebar(show) {
             if (show) {
                 sidebar.classList.add('open');
-                overlay.style.display = 'block';
-                setTimeout(() => overlay.style.opacity = '1', 10);
+                sidebarOverlay.style.display = 'block';
+                setTimeout(() => sidebarOverlay.style.opacity = '1', 10);
             } else {
                 sidebar.classList.remove('open');
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.style.display = 'none', 300);
+                sidebarOverlay.style.opacity = '0';
+                setTimeout(() => sidebarOverlay.style.display = 'none', 300);
             }
         }
         hamburger.addEventListener('click', () => toggleSidebar(true));
         document.getElementById('sidebar-close').addEventListener('click', () => toggleSidebar(false));
-        overlay.addEventListener('click', () => toggleSidebar(false));
+        sidebarOverlay.addEventListener('click', () => toggleSidebar(false));
+
+        // --- Initial Load Render ---
+        renderBoard(); // Render the board silently behind the modal on page load
 
         // --- Flow Controllers ---
 
         document.getElementById('btn-offline').addEventListener('click', () => {
                     currentMode = 'local';
-                    myColor = 'w'; // default bottom color initially
+                    myColor = 'w'; 
                     startScreen.style.display = 'none';
             
                     resetBtn.style.display = 'block';
-            resignBtn.style.display = 'block';
-            drawBtn.style.display = 'none';
-            chatContainer.style.display = 'none';
+                    resignBtn.style.display = 'block';
+                    drawBtn.style.display = 'none';
+                    chatWrapper.style.display = 'none';
             
-            off(ref(db, 'games/')); // Disconnect any online listeners
-            game.reset();
-            renderBoard();
-        });
+                    off(ref(db, 'games/')); // Disconnect any online listeners
+                    game.reset();
+                    renderBoard();
+                });
 
         document.getElementById('btn-online').addEventListener('click', async () => {
             const snap = await get(ref(db, 'games/' + roomId + '/players'));
@@ -398,9 +481,10 @@
             } else if (players.b && !players.w) {
                 joinOnline('w');
             } else if (players.w && players.b) {
-                // Room full, just view as white spectating
+                // Room full, spectating
                 joinOnline('w', true);
             } else {
+                startScreen.style.display = 'none';
                 colorModal.style.display = 'flex';
             }
         });
@@ -417,13 +501,14 @@
         function joinOnline(color, isSpectator = false) {
                     currentMode = 'online';
                     myColor = color;
+                    initialChatLoad = true;
             
                     startScreen.style.display = 'none';
             
-                    resetBtn.style.display = 'none'; // No reset in online, only draw/resign/rematch
-            resignBtn.style.display = 'block';
-            drawBtn.style.display = 'block';
-            chatContainer.style.display = 'flex';
+                    resetBtn.style.display = 'none'; // No reset in online
+                    resignBtn.style.display = 'block';
+                    drawBtn.style.display = 'block';
+                    chatWrapper.style.display = 'flex';
 
             if (!isSpectator) {
                 const playerRef = ref(db, 'games/' + roomId + '/players/' + color);
@@ -481,7 +566,7 @@
         function offerRematch() {
             if (currentMode === 'local') {
                 game.reset();
-                myColor = myColor === 'w' ? 'b' : 'w'; // Flip base perspective
+                myColor = myColor === 'w' ? 'b' : 'w'; 
                 rematchContainer.style.display = 'none';
                 renderBoard();
             } else {
@@ -497,11 +582,10 @@
         function endGame(systemMsg) {
             if (currentMode === 'online') {
                 push(ref(db, 'games/' + roomId + '/chat'), { text: systemMsg });
-                set(ref(db, 'games/' + roomId + '/fen'), 'GAME_OVER_FLAG_' + game.fen()); // Force FEN update to trigger status check
+                set(ref(db, 'games/' + roomId + '/fen'), 'GAME_OVER_FLAG_' + game.fen());
             } else {
                 alert(systemMsg);
             }
-            // We do NOT reset the board immediately, so players can look at the final position and click Rematch
             renderBoard();
             rematchContainer.style.display = 'flex';
         }
@@ -509,12 +593,10 @@
         // --- Firebase Sync ---
 
         function setupFirebaseListeners() {
-            // FEN Sync
             onValue(ref(db, 'games/' + roomId + '/fen'), (snapshot) => {
                 let newFen = snapshot.val();
                 if (!newFen) return;
                 
-                // Check if it's a forced game over flag
                 if (newFen.startsWith('GAME_OVER_FLAG_')) {
                     newFen = newFen.replace('GAME_OVER_FLAG_', '');
                     rematchContainer.style.display = 'flex';
@@ -528,7 +610,6 @@
                 }
             });
 
-            // Draw Offers
             onValue(ref(db, 'games/' + roomId + '/drawOffer'), (snapshot) => {
                 currentDrawOffer = snapshot.val();
                 if (currentDrawOffer) {
@@ -547,7 +628,6 @@
                 }
             });
 
-            // Rematch Sync
             onValue(ref(db, 'games/' + roomId + '/rematchOffer'), (snapshot) => {
                 const offer = snapshot.val();
                 if (offer && offer !== myColor) {
@@ -555,13 +635,11 @@
                     rematchBtn.style.opacity = '1';
                     rematchBtn.style.pointerEvents = 'auto';
                     rematchBtn.onclick = () => {
-                        // Accept Rematch
                         set(ref(db, 'games/' + roomId + '/rematchCount'), increment(1));
                         game.reset();
                         set(ref(db, 'games/' + roomId + '/fen'), game.fen());
                         set(ref(db, 'games/' + roomId + '/rematchOffer'), null);
                         
-                        // Swap DB Player nodes
                         const newColor = myColor === 'w' ? 'b' : 'w';
                         set(ref(db, 'games/' + roomId + '/players/' + newColor), true);
                         set(ref(db, 'games/' + roomId + '/players/' + myColor), null);
@@ -571,16 +649,14 @@
                     rematchBtn.innerText = 'Rematch';
                     rematchBtn.style.opacity = '1';
                     rematchBtn.style.pointerEvents = 'auto';
-                    rematchBtn.onclick = offerRematch; // Restore default handler
+                    rematchBtn.onclick = offerRematch;
                 }
             });
 
-            // Rematch Execution (triggers when count increments)
             onValue(ref(db, 'games/' + roomId + '/rematchCount'), (snapshot) => {
                 const count = snapshot.val() || 0;
                 if (count > currentRematchCount) {
                     currentRematchCount = count;
-                    // If I didn't click accept (meaning I offered), swap my local color too
                     if (rematchBtn.innerText === 'Offer Sent...') {
                         myColor = myColor === 'w' ? 'b' : 'w';
                     }
@@ -590,16 +666,33 @@
                 }
             });
 
-            // Chat Sync
             onValue(ref(db, 'games/' + roomId + '/chat'), (snapshot) => {
-                chatBox.innerHTML = '';
-                snapshot.forEach((child) => {
-                    const msg = document.createElement('div');
-                    msg.innerText = child.val().text;
-                    chatBox.appendChild(msg);
-                });
-                chatBox.scrollTop = chatBox.scrollHeight;
-            });
+                            chatBox.innerHTML = '';
+                            let lastMsgText = '';
+                            snapshot.forEach((child) => {
+                                const msg = document.createElement('div');
+                                msg.innerText = child.val().text;
+                                chatBox.appendChild(msg);
+                                lastMsgText = child.val().text;
+                            });
+                            chatBox.scrollTop = chatBox.scrollHeight;
+
+                            if (!initialChatLoad && lastMsgText) {
+                                if (!isChatOpen) {
+                                    unreadCount++;
+                                    unreadBadge.innerText = unreadCount;
+                                    unreadBadge.style.display = 'flex';
+                        
+                                    chatToast.innerText = lastMsgText;
+                                    chatToast.style.opacity = '1';
+                                    clearTimeout(toastTimeout);
+                                    toastTimeout = setTimeout(() => {
+                                        chatToast.style.opacity = '0';
+                                    }, 3000);
+                                }
+                            }
+                            initialChatLoad = false;
+                        });
         }
 
         // --- Chat Handlers ---
@@ -619,17 +712,16 @@
         // --- Rendering & Logic ---
 
         function updateStatus() {
-                    if (game.in_checkmate() || game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
-                        rematchContainer.style.display = 'flex';
-                    }
-                }
+            if (game.in_checkmate() || game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
+                rematchContainer.style.display = 'flex';
+            }
+        }
 
         function renderBoard() {
             boardEl.innerHTML = '';
             const boardData = game.board();
             let currentPieces = { w: { p:0, n:0, b:0, r:0, q:0 }, b: { p:0, n:0, b:0, r:0, q:0 } };
             
-            // Auto-flip for Pass & Play, Static flip for Online
             const isBoardFlipped = currentMode === 'local' ? game.turn() === 'b' : myColor === 'b';
 
             for (let r = 0; r < 8; r++) {
@@ -645,13 +737,13 @@
                     if (possibleMoves.some(m => m.to === sqId)) sqEl.classList.add('possible-move');
 
                     if (squareData) {
-                        currentPieces[squareData.color][squareData.type]++;
+                                            currentPieces[squareData.color][squareData.type]++;
                         
-                        const img = document.createElement('img');
-                        img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${squareData.color}${squareData.type.toUpperCase()}.png`;
-                        img.className = `piece ${isBoardFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : ''}`;
+                                            const img = document.createElement('img');
+                                            img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/${squareData.color}${squareData.type.toUpperCase()}.png`;
+                                            img.className = `piece ${isBoardFlipped ? 'rotate-piece' : ''} ${squareData.color === 'b' ? 'black-piece' : 'white-piece'}`;
                             
-                        if (squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) {
+                                            if (squareData.type === 'k' && game.in_check() && squareData.color === game.turn()) {
                             img.style.filter = img.style.filter ? `${img.style.filter} drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))` : 'drop-shadow(0 0 12px rgba(255, 0, 0, 0.95))';
                         }
                         sqEl.appendChild(img);
@@ -732,14 +824,22 @@
                 }
 
                 const capturedWhite = standardCounts[type] - currentPieces.w[type];
-                for (let i = 0; i < capturedWhite; i++) {
-                    let img = document.createElement('img');
-                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/w${type.toUpperCase()}.png`;
-                    img.className = isBoardFlipped ? 'rotate-piece' : '';
-                    whiteCapturedZone.appendChild(img);
-                }
+                                for (let i = 0; i < capturedWhite; i++) {
+                                    let img = document.createElement('img');
+                                    img.src = `https://chessboardjs.com/img/chesspieces/wikipedia/w${type.toUpperCase()}.png`;
+                                    img.className = `white-piece ${isBoardFlipped ? 'rotate-piece' : ''}`;
+                                    whiteCapturedZone.appendChild(img);
+                                }
             });
         }
+
+        // Fullscreen Toggle
+        document.body.addEventListener('dblclick', (e) => {
+            if (e.target === document.body || e.target.id === 'game-screen') {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(e=>console.log(e));
+                else document.exitFullscreen().catch(e=>console.log(e));
+            }
+        });
 
     </script>
 </body>
